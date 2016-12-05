@@ -1,0 +1,1 @@
+"# plugin-product-stock" 
