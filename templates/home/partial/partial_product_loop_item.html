@@ -1,0 +1,7 @@
+{% import "backend/macros.html" as s with context %}
+{%- set product_list = datastore.query("product_list", category="index") %}
+{%- if product_list %}
+    {%- for product in product_list.data %}
+        <img src="{{ product.image }}" title="{{ product.title}}" />
+    {%- endfor %}
+{% endif %}
