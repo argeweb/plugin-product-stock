@@ -14,17 +14,17 @@ from plugins.product.models.product_model import ProductModel, ProductCategoryMo
 class StockModel(BasicModel):
     class Meta:
         label_name = {
-            "name": u"名稱",
-            "content": u"詳細介紹",
-            "price":u"價格",
-            "quantity":u"庫存數量",
-            "color":u"顏色",
-            "description":u"簡介",
-            "info":u"規格說明",
-            "spec_name_1":u"尺寸/容量",
-            "image": u"圖片",
-            "is_enable": u"啟用",
-            "category": u"產品",
+            'name': u'名稱',
+            'content': u'詳細介紹',
+            'price':u'價格',
+            'quantity':u'庫存數量',
+            'color':u'顏色',
+            'description':u'簡介',
+            'info':u'規格說明',
+            'spec_name_1':u'尺寸/容量',
+            'image': u'圖片',
+            'is_enable': u'啟用',
+            'category': u'產品',
         }
     name = Fields.StringProperty()
     price = Fields.FloatProperty()

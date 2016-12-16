@@ -17,8 +17,8 @@ class Warehouse(Controller):
         pagination_limit = 10
 
     class Scaffold:
-        display_properties_in_list = ("name", "title", "address", "telephone")
+        display_properties_in_list = ('name', 'title', 'address', 'telephone')
 
-    @route_menu(list_name=u"backend", text=u"倉庫設置", sort=1209, group=u"庫存管理")
+    @route_menu(list_name=u'backend', text=u'倉庫設置', sort=1209, group=u'庫存管理')
     def admin_list(self):
         return scaffold.list(self)
