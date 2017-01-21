@@ -6,7 +6,7 @@
 # Web: http://www.yooliang.com/
 # Date: 2016/07/08.
 
-from argeweb import datastore
+from argeweb import ViewDatastore
 
 plugins_helper = {
     'title': u'產品庫存',
