@@ -15,12 +15,17 @@ class StockModel(BasicModel):
     class Meta:
         label_name = {
             'is_enable': u'啟用',
+            'title': u'完整規格名稱',
+            'sku_full_name': u'sku 編號'
         }
     name = Fields.StringProperty(verbose_name=u'系統編號')
 
     sku_no = Fields.StringProperty(verbose_name=u'sku 編號')
     sku_prev_name = Fields.StringProperty(verbose_name=u'sku 前置編號')
-    sku_full_name = Fields.StringProperty(verbose_name=u'sku 完整編號')
+
+    @property
+    def sku_full_name(self):
+        return '%s-%s' % (self.sku_prev_name, self.sku_no)
 
     spec_full_name = Fields.StringProperty(verbose_name=u'完整規格名稱')
     spec_name_1 = Fields.StringProperty(verbose_name=u'規格名稱 1')
@@ -38,7 +43,13 @@ class StockModel(BasicModel):
     use_automatic_increment = Fields.BooleanProperty(verbose_name=u'自動增量', default=False)
     automatic_increment_quantity = Fields.IntegerProperty(verbose_name=u'增量的數量', default=0)
     category = Fields.CategoryProperty(verbose_name=u'所屬產品', required=True, kind=ProductModel)
+    is_enable = Fields.BooleanProperty(verbose_name=u'顯示於前台', default=True)
+    can_be_purchased = Fields.BooleanProperty(verbose_name=u'可購買', default=True)
     # TODO 庫存變動時的歷史記錄
+
+    @property
+    def title(self):
+        return self.spec_full_name
 
     @property
     def p_quantity(self):

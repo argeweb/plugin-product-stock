@@ -37,33 +37,41 @@
                 {% if has_record %}
                 <div class="sidebar-title">
                     <h3>{{ product.title }}</h3>
-                    <small>{{ total }}。{{ len_records }}</small>
+                    <small>應有 {{ total }} 種規格，目前共有 {{ len_records }} 種。</small>
+                    {% if need_update %}下列為需要新增的規格，<ul>{% for item in need_to_insert_spec_items %}
+                        <li>{{ item }}</li>
+                    {% endfor %}</ul><a href="{{ update_url }}" target="aside_iframe" class="btn">更新</a>{% endif %}
                 </div>
 
                 <ul class="sidebar-list">
-                    {% for item in spec_records %}
+                    {% for item in spec_records %}{% if item.is_low_stock_level %}
                     <li style="border-bottom: none;">
                         <a href="{{ uri_action_link('edit', item=item) }}" target="aside_iframe">
-                            <div class="small pull-right m-t-xs">{{ item.modified }}</div>
+                            <div class="small pull-right m-t-xs moment-from-now" data-from-now="{{ item.modified }}"></div>
                             <h4>{{ item.spec_full_name }}</h4>
                             <div class="small text-muted m-t-xs">庫存： {{ item.p_quantity }}%
                                 ( {{ item.quantity }} / {{ item.last_in_quantity }} )</div>
                             <div class="progress progress-mini">
-                                <div style="width: {{ item.p_quantity }}%;" class="progress-bar {% if item.is_low_stock_level %}progress-bar-danger{% endif %}"></div>
+                                <div style="width: {{ item.p_quantity }}%;" class="progress-bar progress-bar-danger"></div>
                             </div>
                         </a>
                     </li>
-                    {% endfor %}
+                    {% endif %}{% endfor %}
                 </ul>
-                <ul>
-                    {% for item in spec %}
-                        <li>{{ item }}</li>
-                    {% endfor %}
-                    <hr>
-                    {% for item in spec_records %}
-                        <li>{{ item.spec_full_name }}  --  庫存量 {{ item.quantity }}</li>
-                    {% endfor %}
-
+                <ul class="sidebar-list">
+                    {% for item in spec_records %}{% if not item.is_low_stock_level %}
+                    <li style="border-bottom: none;">
+                        <a href="{{ uri_action_link('edit', item=item) }}" target="aside_iframe">
+                            <div class="small pull-right m-t-xs moment-from-now" data-from-now="{{ item.modified }}"></div>
+                            <h4>{{ item.spec_full_name }}</h4>
+                            <div class="small text-muted m-t-xs">庫存： {{ item.p_quantity }}%
+                                ( {{ item.quantity }} / {{ item.last_in_quantity }} )</div>
+                            <div class="progress progress-mini">
+                                <div style="width: {{ item.p_quantity }}%;" class="progress-bar"></div>
+                            </div>
+                        </a>
+                    </li>
+                    {% endif %}{% endfor %}
                 </ul>
                 {% endif %}
             </div>

@@ -26,8 +26,9 @@ def process_spec(spec_data):
     return_data.insert(0, spec_split[0].strip())
     return return_data
 
-def gen_spec(list_exist, list_need_to_append):
-    """ 合併各規格陣列，成一維的陣列
+
+def gen_spec_item(list_exist, list_need_to_append):
+    """ 將 list_need_to_append 陣列合併至，list_exist 成一維的陣列
     :param list_exist: ['尺寸:s,大小:5', '尺寸:s,大小:6']
     :param list_need_to_append: ['顏色', '紅', '綠']
     :return:
@@ -41,8 +42,9 @@ def gen_spec(list_exist, list_need_to_append):
                 return_list_exist.append(new_item)
     return return_list_exist
 
+
 def get_spec_lists(original_specs):
-    """
+    """ 合併各規格陣列，成一維的陣列
     :param original_specs: an array like [['尺寸', 's', 'm', 'l'], ['大小', '5', '6']]
     :return:
         ['尺寸:s,大小:5','尺寸:m,大小:5','尺寸:l,大小:5','尺寸:s,大小:6','尺寸:m,大小:6','尺寸:l,大小:6']
@@ -59,8 +61,28 @@ def get_spec_lists(original_specs):
                     spec_lists.append(new_item)
         elif loop_item_len > 0:
             total *= loop_item_len
-            spec_lists = gen_spec(spec_lists, loop_item_spec_list)
+            spec_lists = gen_spec_item(spec_lists, loop_item_spec_list)
     return total, spec_lists
+
+
+def get_need_update_spec_item_list(new_spec_list, old_spec_records):
+    """ 比較應有的規格與現有規格，然後回傳需要新增的規格資料
+    :param new_spec_list: ['尺寸:s,大小:5','尺寸:m,大小:5']
+    :param old_spec_records: ndb records
+    :return:
+        ['尺寸:m,大小:5']
+    """
+    need_to_insert_spec_items = []
+    if old_spec_records is not None:
+        for spec_item in new_spec_list:
+            is_find = False
+            for spec_record in old_spec_records:
+                if spec_record.spec_full_name == spec_item:
+                    is_find = True
+            if is_find is False:
+                need_to_insert_spec_items.append(spec_item)
+    return need_to_insert_spec_items
+
 
 class Stock(Controller):
     class Meta:
@@ -68,7 +90,7 @@ class Stock(Controller):
         pagination_limit = 10
 
     class Scaffold:
-        display_properties_in_list = ('name', 'title', 'is_enable', 'category')
+        display_properties_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
 
     @route_menu(list_name=u'backend', text=u'庫存', sort=1201, group=u'庫存管理')
     def admin_list(self):
@@ -104,7 +126,6 @@ class Stock(Controller):
             self.context['no_record_data'] = True
             return
         product_record = self.util.decode_key(target).get()
-        self.context['has_record'] = True
         self.context['product'] = product_record
 
         total, spec_lists = get_spec_lists([process_spec(product_record.spec_1), process_spec(product_record.spec_2),
@@ -113,7 +134,15 @@ class Stock(Controller):
 
         self.context['spec'] = spec_lists
         self.context['total'] = total
+        if total == 0:
+            self.context['no_spec_data'] = True
+            return
 
+        do_update = self.params.get_boolean('update', False)
+        if do_update is False:
+            self.context['update_url'] = self.request.path + "?update=True"
+
+        self.context['has_record'] = True
         def query_factory(controller):
             model = controller.meta.Model
             return model.query(model.category == product_record.key).order(model.sort)
@@ -121,25 +150,21 @@ class Stock(Controller):
         self.scaffold.query_factory = query_factory
         scaffold.list(self)
         spec_records = self.context[self.scaffold.singular].fetch()
-        if spec_records:
-            self.context['len_records'] = len(spec_records)
-            if len(spec_records) == 0:
-                self.context['no_spec_data'] = True
-                return
 
-        need_to_insert_spec_items = []
-        for spec_item in spec_lists:
-            is_find = False
-            if spec_records is not None:
-                for spec_record in spec_records:
-                    if spec_record.spec_full_name == spec_item:
-                        is_find = True
-            if is_find is False:
-                need_to_insert_spec_items.append(spec_item)
-                # m = self.meta.Model()
-                # m.spec_full_name = spec_item
-                # m.category = product_record.key
-                # m.put()
+        need_to_insert_spec_items = get_need_update_spec_item_list(spec_lists, spec_records)
+
+        if do_update:
+            for update_item in need_to_insert_spec_items:
+                m = self.meta.Model()
+                m.spec_full_name = update_item
+                m.category = product_record.key
+                m.put()
+            spec_records = self.context[self.scaffold.singular].fetch()
+        else:
+            if len(need_to_insert_spec_items) > 0:
+                self.context['need_update'] = True
+                self.context['need_to_insert_spec_items'] = need_to_insert_spec_items
+        self.context['len_records'] = len(spec_records)
         self.context['spec_records'] = spec_records
 
     @route
