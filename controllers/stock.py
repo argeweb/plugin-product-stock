@@ -9,6 +9,7 @@
 from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
+from ..models.warehouse_model import WarehouseModel
 
 
 def process_spec(spec_data):
@@ -90,7 +91,7 @@ class Stock(Controller):
         pagination_limit = 10
 
     class Scaffold:
-        display_properties_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
+        display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
 
     @route_menu(list_name=u'backend', text=u'庫存', sort=1201, group=u'庫存管理')
     def admin_list(self):
@@ -122,6 +123,7 @@ class Stock(Controller):
 
     @route
     def admin_list_for_side_panel(self, target=''):
+        self.context['ware_house'] = WarehouseModel.all()
         if target == '--no-record--':
             self.context['no_record_data'] = True
             return
