@@ -76,8 +76,12 @@
                 {% endif %}
             </div>
             <div id="tab-2" class="tab-pane">
+                <form method="POST" action="{{ uri_action_link('stock_in') }}"
+                      data-return-encoding="{{ scaffolding.form_return_encoding }}"
+                      enctype="{{ scaffolding.form_encoding }}" accept-charset="UTF-8"
+                      target="iframeForm" role="form" id="in-warehouse">
                 <div class="sidebar-title">
-                    <h4>入庫</h4>
+                    <h4>入庫倉庫</h4>
                     <select name="warehouse" class="form-control">{% for item in ware_house %}
                         <option value="{{ print_key(item) }}">{{ item.title }}</option>
                     {% endfor %}</select>
@@ -93,6 +97,8 @@
                 </div>
 
                 <div style="margin-bottom: 30px;">
+                    <input type="hidden" name="op-type" value="product" />
+                    <input type="hidden" name="length" value="{{ len_records }}" />
                     {% for item in spec_records %}
                         <div class="form-group form-group-name  filed-group- ">
                             <label class="col-xs-12 control-label" for="spec-{{ print_key(item) }}">
@@ -100,15 +106,21 @@
                                 {{ item.spec_full_name }}
                             </label>
                             <div class="col-xs-12 ">
-                                <input class="form-control field-control field-type-string-field"
-                                       id="spec-{{ print_key(item) }}" name="{{ print_key(item) }}" type="number" value="0">
+                                <input type="hidden" name="sku-key-{{ loop.index0 }}" value="{{ print_key(item) }}">
+                                <input type="number" name="sku-quantity-{{ loop.index0 }}" id="spec-{{ print_key(item) }}"
+                                       class="form-control field-control field-type-string-field" value="0">
                             </div>
                         </div>
                     {% endfor %}
                     <br style="clear: both;">
                 </div>
+                </form>
             </div>
             <div id="tab-3" class="tab-pane">
+                <form method="POST" action="{{ uri_action_link('stock_out') }}"
+                      data-return-encoding="{{ scaffolding.form_return_encoding }}"
+                      enctype="{{ scaffolding.form_encoding }}" accept-charset="UTF-8"
+                      target="iframeForm" role="form" id="out-warehouse">
                 <div class="sidebar-title">
                     <h4>出庫倉庫</h4>
                     <select name="warehouse" class="form-control">{% for item in ware_house %}
@@ -118,7 +130,7 @@
                     <textarea name="remake" class="form-control"></textarea>
                     <div style="height: 22px;margin: 6px 0 0 0;">
                         {% if has_record %}
-                        <a class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
+                        <a id="btn-out-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
                         {% else %}
                         <span class="btn pull-right" style="color: #aaa;">目前無法使用</span>
                         {% endif %}
@@ -126,6 +138,8 @@
                 </div>
 
                 <div style="margin-bottom: 30px;">
+                    <input type="hidden" name="op-type" value="product" />
+                    <input type="hidden" name="length" value="{{ len_records }}" />
                     {% for item in spec_records %}
                         <div class="form-group form-group-name  filed-group- ">
                             <label class="col-xs-12 control-label" for="spec-{{ print_key(item) }}">
@@ -133,13 +147,16 @@
                                 {{ item.spec_full_name }}
                             </label>
                             <div class="col-xs-12 ">
-                                <input class="form-control field-control field-type-string-field"
-                                       id="spec-{{ print_key(item) }}" name="{{ print_key(item) }}" type="number" value="0">
+                                <input type="hidden" name="sku-key-{{ loop.index0 }}" value="{{ print_key(item) }}">
+                                <input type="number" name="sku-quantity-{{ loop.index0 }}" id="spec-{{ print_key(item) }}"
+                                       class="form-control field-control field-type-string-field"
+                                       max="{{ item.quantity }}" value="0">
                             </div>
                         </div>
                     {% endfor %}
                     <br style="clear: both;">
                 </div>
+                </form>
             </div>
         </div>
     </div>
@@ -152,9 +169,12 @@
 <script type="text/javascript">
     (function(page){
         $("#btn-in-warehouse").click(function(){
-            $("#tab-2 select, #tab-2 input, #tab-2 textarea").each(function(){
-                console.log($(this).attr("name"), $(this).val());
-            });
+            console.log($("#in-warehouse").serialize());
+            saveForm("#in-warehouse");
+        });
+        $("#btn-out-warehouse").click(function(){
+            console.log($("#out-warehouse").serialize());
+            saveForm("#out-warehouse");
         });
     })(page);
 </script>

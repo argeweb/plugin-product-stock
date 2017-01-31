@@ -5,7 +5,7 @@
 # Author: Qi-Liang Wen (温啓良）
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
-
+from datetime import datetime
 from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
@@ -120,6 +120,36 @@ class Stock(Controller):
     @route_menu(list_name=u'backend', text=u'出入庫性質設置', sort=1211, group=u'庫存管理')
     def admin_list(self):
         return scaffold.list(self)
+
+    @route
+    def admin_stock_in(self):
+        length = self.params.get_integer('length')
+        for index in xrange(0, length):
+            r = self.params.get_ndb_record('sku-key-%s' % str(index))
+            if r is not None:
+                quantity = self.params.get_integer('sku-quantity-%s' % str(index))
+                if quantity != 0:
+                    r.quantity = r.quantity + quantity
+                    r.last_in_quantity = r.quantity
+                    r.last_in_datetime = datetime.now()
+                    r.put()
+        self.context['message'] = u'完成'
+        return self.json({'aa': 'bbb'})
+
+    @route
+    def admin_stock_out(self):
+        length = self.params.get_integer('length')
+        for index in xrange(0, length):
+            r = self.params.get_ndb_record('sku-key-%s' % str(index))
+            if r is not None:
+                quantity = self.params.get_integer('sku-quantity-%s' % str(index))
+                if quantity != 0:
+                    r.quantity = r.quantity - quantity
+                    r.last_out_quantity = r.quantity
+                    r.last_out_datetime = datetime.now()
+                    r.put()
+        self.context['message'] = u'完成'
+        return self.json({'aa': 'bbb'})
 
     @route
     def admin_list_for_side_panel(self, target=''):
