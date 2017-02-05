@@ -10,7 +10,7 @@ from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
 from ..models.warehouse_model import WarehouseModel
-
+from ..models.stock_history_model import StockHistoryModel
 
 def process_spec(spec_data):
     """ 格式化產品規格資料、去除空白
@@ -89,9 +89,11 @@ class Stock(Controller):
     class Meta:
         components = (scaffold.Scaffolding, Pagination, Search)
         pagination_limit = 10
+        Model = StockHistoryModel
 
     class Scaffold:
         display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
+        disabled_in_form = ('category', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
 
     @route_menu(list_name=u'backend', text=u'庫存', sort=1201, group=u'庫存管理')
     def admin_list(self):
