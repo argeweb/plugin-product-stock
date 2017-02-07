@@ -1,17 +1,11 @@
 {% extends "backend/form.html" %}
 {% block layout_header %}{% endblock %}
 {% block layout_content %}
-    <div class="sidebar-container" style="width: auto; height: 100%;">
+    <div class="sidebar-container" style="width: auto; height: 100%;" id="app">
         <ul class="nav nav-tabs navs-3">
-            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="false">
-                庫存
-            </a></li>
-            <li class=""><a data-toggle="tab" href="#tab-2" aria-expanded="true">
-                入庫
-            </a></li>
-            <li class=""><a data-toggle="tab" href="#tab-3" aria-expanded="false">
-                出庫
-            </a></li>
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">庫存</a></li>
+            <li class=""><a data-toggle="tab" href="#tab-2" aria-expanded="false">入庫</a></li>
+            <li class=""><a data-toggle="tab" href="#tab-3" aria-expanded="false">出庫</a></li>
         </ul>
 
         <div class="tab-content">
@@ -42,13 +36,12 @@
                         <li>{{ item }}</li>
                     {% endfor %}</ul><a href="{{ update_url }}" target="aside_iframe" class="btn">更新</a>{% endif %}
                 </div>
-
                 <ul class="sidebar-list">
                     {% for item in spec_records %}{% if item.is_low_stock_level %}
                     <li style="border-bottom: none;">
                         <a href="{{ uri_action_link('edit', item=item) }}" target="aside_iframe">
                             <div class="small pull-right m-t-xs moment-from-now" data-from-now="{{ print_value(item.modified) }}"></div>
-                            <h4>{{ item.spec_full_name }}</h4>
+                            <h4 id="spec-name-{{ print_key(item) }}">{{ item.spec_full_name }}</h4>
                             <div class="small text-muted m-t-xs">庫存： {{ item.p_quantity }}%
                                 ( {{ item.quantity }} / {{ item.last_in_quantity }} )</div>
                             <div class="progress progress-mini">
@@ -63,7 +56,7 @@
                     <li style="border-bottom: none;">
                         <a href="{{ uri_action_link('edit', item=item) }}" target="aside_iframe">
                             <div class="small pull-right m-t-xs moment-from-now" data-from-now="{{ print_value(item.modified) }}"></div>
-                            <h4>{{ item.spec_full_name }}</h4>
+                            <h4 id="spec-name-{{ print_key(item) }}">{{ item.spec_full_name }}</h4>
                             <div class="small text-muted m-t-xs">庫存： {{ item.p_quantity }}%
                                 ( {{ item.quantity }} / {{ item.last_in_quantity }} )</div>
                             <div class="progress progress-mini">
@@ -82,7 +75,7 @@
                       target="iframeForm" role="form" id="in-warehouse">
                 <div class="sidebar-title">
                     <h4>入庫倉庫</h4>
-                    <select name="warehouse" class="form-control">{% for item in ware_house %}
+                    <select name="warehouse" class="form-control" id="in-warehouse-select" v-model="in_warehouse">{% for item in warehouse %}
                         <option value="{{ print_key(item) }}">{{ item.title }}</option>
                     {% endfor %}</select>
                     <h4>入庫摘要</h4>
@@ -94,26 +87,25 @@
                         <span class="btn pull-right" style="color: #aaa;">目前無法使用</span>
                         {% endif %}
                     </div>
-                </div>
-
-                <div style="margin-bottom: 30px;">
                     <input type="hidden" name="op-type" value="product" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
-                    {% for item in spec_records %}
-                        <div class="form-group form-group-name  filed-group- ">
-                            <label class="col-xs-12 control-label" for="spec-{{ print_key(item) }}">
-                                 <div class="small pull-right" style="font-weight: 100;">庫存: {{ item.quantity }}</div>
-                                {{ item.spec_full_name }}
-                            </label>
-                            <div class="col-xs-12 ">
-                                <input type="hidden" name="sku-key-{{ loop.index0 }}" value="{{ print_key(item) }}">
-                                <input type="number" name="sku-quantity-{{ loop.index0 }}" id="spec-{{ print_key(item) }}"
-                                       class="form-control field-control field-type-string-field" min="0" value="0">
-                            </div>
-                        </div>
-                    {% endfor %}
-                    <br style="clear: both;">
                 </div>
+
+                <div style="margin-bottom: 30px;" id="out-warehouse-spec-area" v-for="item in spec">
+                    <div class="form-group form-group-name filed-group" v-if="item.warehouse.__key__ == in_warehouse">
+                        <label class="col-xs-12 control-label" :for="'spec-' + item.key">
+                             <div class="small pull-right" style="font-weight: 100;">庫存: {{item.quantity}}</div>
+                            {{item.spec_full_name}}
+                        </label>
+                        <div class="col-xs-12 ">
+                            <input type="hidden" :name="'sku-key-' + item.index" :value="item.key">
+                            <input type="number" :name="'sku-quantity-' + item.index" :id="'spec-' + item.key"
+                                   class="form-control field-control field-type-string-field" min="0"
+                                   value="0">
+                        </div>
+                    </div>
+                </div>
+                <br style="clear: both;">
                 </form>
             </div>
             <div id="tab-3" class="tab-pane">
@@ -123,7 +115,7 @@
                       target="iframeForm" role="form" id="out-warehouse">
                 <div class="sidebar-title">
                     <h4>出庫倉庫</h4>
-                    <select name="warehouse" class="form-control">{% for item in ware_house %}
+                    <select name="warehouse" class="form-control" id="out-warehouse-select" v-model="out_warehouse">{% for item in warehouse %}
                         <option value="{{ print_key(item) }}">{{ item.title }}</option>
                     {% endfor %}</select>
                     <h4>出庫摘要</h4>
@@ -135,27 +127,25 @@
                         <span class="btn pull-right" style="color: #aaa;">目前無法使用</span>
                         {% endif %}
                     </div>
-                </div>
-
-                <div style="margin-bottom: 30px;">
                     <input type="hidden" name="op-type" value="product" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
-                    {% for item in spec_records %}
-                        <div class="form-group form-group-name  filed-group- ">
-                            <label class="col-xs-12 control-label" for="spec-{{ print_key(item) }}">
-                                 <div class="small pull-right" style="font-weight: 100;">庫存: {{ item.quantity }}</div>
-                                {{ item.spec_full_name }}
-                            </label>
-                            <div class="col-xs-12 ">
-                                <input type="hidden" name="sku-key-{{ loop.index0 }}" value="{{ print_key(item) }}">
-                                <input type="number" name="sku-quantity-{{ loop.index0 }}" id="spec-{{ print_key(item) }}"
-                                       class="form-control field-control field-type-string-field" min="0"
-                                       max="{{ item.quantity }}" value="0">
-                            </div>
-                        </div>
-                    {% endfor %}
-                    <br style="clear: both;">
                 </div>
+
+                <div style="margin-bottom: 30px;" id="out-warehouse-spec-area" v-for="item in spec">
+                    <div class="form-group form-group-name filed-group" v-if="item.warehouse.__key__ == out_warehouse">
+                        <label class="col-xs-12 control-label" :for="'spec-' + item.key">
+                             <div class="small pull-right" style="font-weight: 100;">庫存: {{item.quantity}}</div>
+                            {{item.spec_full_name}}
+                        </label>
+                        <div class="col-xs-12 ">
+                            <input type="hidden" :name="'sku-key-' + item.index" :value="item.key">
+                            <input type="number" :name="'sku-quantity-' + item.index" :id="'spec-' + item.key"
+                                   class="form-control field-control field-type-string-field" min="0"
+                                    :max="item.quantity" value="0">
+                        </div>
+                    </div>
+                </div>
+                <br style="clear: both;">
                 </form>
             </div>
         </div>
@@ -168,12 +158,59 @@
 
 <script type="text/javascript">
     (function(page){
+        page['app'] = new Vue({
+            el: '#app',
+            data: {
+                spec: [],
+                out_warehouse: "",
+                in_warehouse: ""
+            }
+        });
         $("#btn-in-warehouse").click(function(){
-            saveForm("#in-warehouse");
+            saveForm("#in-warehouse", backend.aside_iframe.reload);
         });
         $("#btn-out-warehouse").click(function(){
-            saveForm("#out-warehouse");
+            saveForm("#out-warehouse", backend.aside_iframe.reload);
         });
+        {% if has_record %}
+        page['load_warehouse_detail'] = function(warehouse){
+            if (warehouse === "undefined" || typeof warehouse === "undefined") return;
+            json_async("{{ uri_action_link('get_warehouse_detail') }}",
+                    "product={{ print_key(product) }}&warehouse=" + warehouse, function(result){
+                var data = result.data;
+                $.map(data, function(item, i){
+                    item.index = i;
+                    item.ni_key = item.__key__;
+                    item.key = item.sku.__key__;
+                    item.spec_full_name = $("#spec-name-" + item.key).text();
+                    let is_find = -1;
+                    for(let j=0;j<page['app']["spec"].length;j++){
+                        if (page['app']["spec"][j].ni_key == item.ni_key){
+                            is_find = j;
+                        }
+                    }
+                    if (is_find >= 0){
+                        page['app']["spec"][is_find] = item;
+                    }else{
+                        page['app']["spec"].push(item);
+                    }
+                });
+            });
+        };
+        $("#out-warehouse-select").change(function(){
+            page['load_warehouse_detail']($("#out-warehouse-select option:selected").val());
+        });
+        $("#in-warehouse-select").change(function(){
+            page['load_warehouse_detail']($("#in-warehouse-select option:selected").val());
+        });
+        setTimeout(function () {
+            page['app'].in_warehouse = $("#in-warehouse-select option").last().val();
+            page['app'].out_warehouse = $("#out-warehouse-select option").last().val();
+            $("#in-warehouse-select option").last().prop("selected", true);
+            $("#out-warehouse-select option").last().prop("selected", true);
+            page['load_warehouse_detail']($("#in-warehouse-select option:selected").val());
+        }, 1500);
+        {% endif %}
     })(page);
 </script>
 {% endblock %}
