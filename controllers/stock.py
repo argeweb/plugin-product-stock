@@ -11,6 +11,8 @@ from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
 from ..models.warehouse_model import WarehouseModel
 from ..models.stock_history_model import StockHistoryModel
+from ..models.stock_keeping_unit_model import StockKeepingUnitModel
+from ..models.stock_keeping_unit_in_warehouse_model import StockKeepingUnitInWarehouseModel as SKUIW_Model
 
 def process_spec(spec_data):
     """ 格式化產品規格資料、去除空白
@@ -89,7 +91,7 @@ class Stock(Controller):
     class Meta:
         components = (scaffold.Scaffolding, Pagination, Search)
         pagination_limit = 10
-        Model = StockHistoryModel
+        Model = StockKeepingUnitModel
 
     class Scaffold:
         display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
@@ -126,6 +128,7 @@ class Stock(Controller):
     @route
     def admin_stock_in(self):
         length = self.params.get_integer('length')
+        w = self.params.get_ndb_record('warehouse')
         for index in xrange(0, length):
             r = self.params.get_ndb_record('sku-key-%s' % str(index))
             if r is not None:
@@ -134,6 +137,7 @@ class Stock(Controller):
                     r.quantity = r.quantity + quantity
                     r.last_in_quantity = r.quantity
                     r.last_in_datetime = datetime.now()
+                    SKUIW_Model.in_warehouse(r, w, quantity)
                     r.put()
         self.context['message'] = u'完成'
         return self.json({'aa': 'bbb'})
@@ -141,11 +145,15 @@ class Stock(Controller):
     @route
     def admin_stock_out(self):
         length = self.params.get_integer('length')
+        w = self.params.get_ndb_record('warehouse')
         for index in xrange(0, length):
             r = self.params.get_ndb_record('sku-key-%s' % str(index))
             if r is not None:
                 quantity = self.params.get_integer('sku-quantity-%s' % str(index))
+                n = -1
                 if quantity != 0:
+                    n = SKUIW_Model.out_warehouse(r, w, quantity)
+                if n != -1:
                     r.quantity = r.quantity - quantity
                     r.last_out_quantity = r.quantity
                     r.last_out_datetime = datetime.now()
@@ -155,7 +163,7 @@ class Stock(Controller):
 
     @route
     def admin_list_for_side_panel(self, target=''):
-        self.context['ware_house'] = WarehouseModel.all()
+        self.context['warehouse'] = WarehouseModel.all()
         if target == '--no-record--':
             self.context['no_record_data'] = True
             return
@@ -200,6 +208,16 @@ class Stock(Controller):
                 self.context['need_to_insert_spec_items'] = need_to_insert_spec_items
         self.context['len_records'] = len(spec_records)
         self.context['spec_records'] = spec_records
+
+    @route
+    def admin_get_warehouse_detail(self):
+        self.meta.change_view('json')
+        product = self.params.get_ndb_record('product')
+        warehouse = self.params.get_ndb_record('warehouse')
+        if product is None or warehouse is None:
+            self.context['data'] = None
+            return
+        self.context['data'] = SKUIW_Model.get_all_with_product(product, warehouse)
 
     @route
     def admin_insert_spec_to_product_records(self, target=''):
