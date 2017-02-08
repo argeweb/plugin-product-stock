@@ -50,8 +50,7 @@
                         </a>
                     </li>
                     {% endif %}{% endfor %}
-                </ul>
-                <ul class="sidebar-list">
+
                     {% for item in spec_records %}{% if not item.is_low_stock_level %}
                     <li style="border-bottom: none;">
                         <a href="{{ uri_action_link('edit', item=item) }}" target="aside_iframe">
@@ -65,6 +64,18 @@
                         </a>
                     </li>
                     {% endif %}{% endfor %}
+
+                    <li style="border-bottom: none;" v-for="item in spec_p">
+                        <a :href="item.url" target="aside_iframe">
+                            <div class="small pull-right m-t-xs moment-from-now" :data-from-now="item.modified"></div>
+                            <h4 :id="'spec-name-' + item.key">{{item.spec_full_name}}</h4>
+                            <div class="small text-muted m-t-xs">庫存： {{item.p_quantity}}%
+                                ( {{item.quantity}} / {{item.last_in_quantity}} / {{item.p_quantity}})</div>
+                            <div class="progress progress-mini">
+                                <div :style="'width:' + item.p_quantity + '%'"  :class="[item.is_low_stock_level ? 'progress-bar-danger' : '', 'progress-bar']"></div>
+                            </div>
+                        </a>
+                    </li>
                 </ul>
                 {% endif %}
             </div>
@@ -91,8 +102,10 @@
                     <input type="hidden" name="length" value="{{ len_records }}" />
                 </div>
 
-                <div style="margin-bottom: 30px;" id="out-warehouse-spec-area" v-for="item in spec">
-                    <div class="form-group form-group-name filed-group" v-if="item.warehouse.__key__ == in_warehouse">
+                <div v-for="item in spec">
+                    <div class="form-group form-group-name filed-group"
+                         style="margin-bottom: 30px;"
+                         v-if="item.warehouse.__key__ == in_warehouse">
                         <label class="col-xs-12 control-label" :for="'spec-' + item.key">
                              <div class="small pull-right" style="font-weight: 100;">庫存: {{item.quantity}}</div>
                             {{item.spec_full_name}}
@@ -131,8 +144,10 @@
                     <input type="hidden" name="length" value="{{ len_records }}" />
                 </div>
 
-                <div style="margin-bottom: 30px;" id="out-warehouse-spec-area" v-for="item in spec">
-                    <div class="form-group form-group-name filed-group" v-if="item.warehouse.__key__ == out_warehouse">
+                <div v-for="item in spec">
+                    <div class="form-group form-group-name filed-group"
+                         style="margin-bottom: 30px;"
+                         v-if="item.warehouse.__key__ == out_warehouse && item.quantity > 0">
                         <label class="col-xs-12 control-label" :for="'spec-' + item.key">
                              <div class="small pull-right" style="font-weight: 100;">庫存: {{item.quantity}}</div>
                             {{item.spec_full_name}}
@@ -155,46 +170,102 @@
 {% block form_actions %}{% endblock %}
 {% block layout_buttons %}{% endblock %}
 {% block layout_scripts %}
-
 <script type="text/javascript">
     (function(page){
+        var p = sortByKey([{% for item in spec_records %}{
+                "__key__": "{{ print_key(item) }}",
+                "key": "spec-name-{{ print_key(item) }}",
+                "spec_full_name": "{{ item.spec_full_name }}",
+                "is_low_stock_level": {% if item.is_low_stock_level %}true{% else %}false{% endif %},
+                "url": "{{ uri_action_link('edit', item=item) }}",
+                "modified": "{{ item.modified }}",
+                "quantity": {{ item.quantity }},
+                "p_quantity": {{ item.p_quantity }},
+                "last_in_quantity": {{ item.last_in_quantity }}
+            },{% endfor %}], "spec_full_name");
         page['app'] = new Vue({
             el: '#app',
             data: {
+                spec_p: p,
                 spec: [],
                 out_warehouse: "",
                 in_warehouse: ""
             }
         });
         $("#btn-in-warehouse").click(function(){
-            saveForm("#in-warehouse", backend.aside_iframe.reload);
+            saveForm("#in-warehouse", function(data, message){
+                show_message(message, 4000);
+                page["replace_spec_data"](data.data);
+                page["load_sku"]();
+            });
         });
         $("#btn-out-warehouse").click(function(){
-            saveForm("#out-warehouse", backend.aside_iframe.reload);
+            saveForm("#out-warehouse", function(data, message){
+                show_message(message, 4000);
+                page["replace_spec_data"](data.data);
+                page["load_sku"]();
+            });
         });
+        function sortByKey(array, key) {
+            return array.sort(function (a, b) {
+                var x = a[key];
+                var y = b[key];
+                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+            });
+        }
+        page["replace_spec_data"] = function(data){
+            $.map(data, function(item, i){
+                item.index = i;
+                item.ni_key = item.__key__;
+                item.key = item.sku.__key__;
+                item.spec_full_name = $("#spec-name-" + item.key).text();
+                let is_find = -1;
+                for(let j=0;j<page['app'].spec.length;j++){
+                    if (page['app'].spec[j].ni_key == item.ni_key){
+                        is_find = j;
+                    }
+                }
+                if (is_find >= 0){
+                    page['app'].spec[is_find].quantity = item.quantity;
+                }else{
+                    page['app'].spec.push(item);
+                }
+            });
+            page['app'].spec = sortByKey(page['app'].spec, "spec_full_name");
+        };
+        page["replace_spec_p_data"] = function(data){
+            $.map(data, function(item, i){
+                let is_find = -1;
+                item.p_quantity = item.quantity / item.last_in_quantity * 100.0;
+                item.is_low_stock_level = (item.is_low_stock_level === "True");
+                for(let j=0;j<page['app'].spec_p.length;j++){
+                    if (page['app'].spec_p[j].__key__ == item.__key__){
+                        is_find = j;
+                    }
+                }
+                if (is_find >= 0){
+                    page['app'].spec_p[is_find].quantity = item.quantity;
+                    page['app'].spec_p[is_find].p_quantity = item.p_quantity;
+                    page['app'].spec_p[is_find].last_in_quantity = item.last_in_quantity;
+                    page['app'].spec_p[is_find].modified = item.modified;
+                }else{
+                    page['app'].spec_p.push(item);
+                }
+            });
+            page['app'].spec_p = sortByKey(page['app'].spec_p, "spec_full_name");
+        };
         {% if has_record %}
-        page['load_warehouse_detail'] = function(warehouse){
+        page["load_warehouse_detail"] = function(warehouse){
             if (warehouse === "undefined" || typeof warehouse === "undefined") return;
             json_async("{{ uri_action_link('get_warehouse_detail') }}",
                     "product={{ print_key(product) }}&warehouse=" + warehouse, function(result){
-                var data = result.data;
-                $.map(data, function(item, i){
-                    item.index = i;
-                    item.ni_key = item.__key__;
-                    item.key = item.sku.__key__;
-                    item.spec_full_name = $("#spec-name-" + item.key).text();
-                    let is_find = -1;
-                    for(let j=0;j<page['app']["spec"].length;j++){
-                        if (page['app']["spec"][j].ni_key == item.ni_key){
-                            is_find = j;
-                        }
-                    }
-                    if (is_find >= 0){
-                        page['app']["spec"][is_find] = item;
-                    }else{
-                        page['app']["spec"].push(item);
-                    }
-                });
+                page["replace_spec_data"](result.data);
+            });
+        };
+        page["load_sku"] = function(){
+            json_async("{{ uri_action_link('get_sku_detail') }}",
+                    "product={{ print_key(product) }}", function(result){
+                page["replace_spec_p_data"](result.data);
             });
         };
         $("#out-warehouse-select").change(function(){
@@ -203,6 +274,7 @@
         $("#in-warehouse-select").change(function(){
             page['load_warehouse_detail']($("#in-warehouse-select option:selected").val());
         });
+        page["load_sku"]();
         setTimeout(function () {
             page['app'].in_warehouse = $("#in-warehouse-select option").last().val();
             page['app'].out_warehouse = $("#out-warehouse-select option").last().val();

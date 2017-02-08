@@ -36,27 +36,40 @@ class StockKeepingUnitInWarehouseModel(BasicModel):
             record.quantity = 0
         record.quantity = int(record.quantity) + int(quantity)
         record.put()
-        return record.quantity
+        return record
 
     @classmethod
     def out_warehouse(cls, sku, warehouse, quantity):
-        record = cls.query(cls.sku==sku.key,cls.warehouse==warehouse.key).get()
+        record = cls.get_or_create(sku=sku, warehouse=warehouse, quantity=0)
+        record.quantity = int(record.quantity) - int(quantity)
+        if record.quantity >= 0:
+            return -1
+        return record.quantity
+
+    @classmethod
+    def get_or_create(cls, sku, warehouse, quantity=0):
+        record = cls.query(cls.sku==sku.key, cls.warehouse==warehouse.key).get()
         if record is None:
             record = cls()
             record.sku = sku.key
             record.product = sku.category
             record.warehouse = warehouse.key
-            record.quantity = 0
-        record.quantity = int(record.quantity) - int(quantity)
-        if record.quantity <= 0:
-            return -1
+            record.quantity = quantity
         record.put()
-        return record.quantity
+        return record
 
     @classmethod
-    def get_all_with_product(cls,product, warehouse=None, quantity=0):
+    def get_all_with_product(cls,product, warehouse=None):
         if warehouse is None:
-            return cls.query(cls.product==product.key, cls.quantity>0)
+            return cls.query(cls.product==product.key)
         else:
-            return cls.query(cls.product==product.key, cls.warehouse==warehouse.key, cls.quantity>quantity)
+            return cls.query(cls.product==product.key, cls.warehouse==warehouse.key)
 
+    @classmethod
+    def create_sku_by_product(cls, product, warehouse=None):
+        from stock_keeping_unit_model import StockKeepingUnitModel as SKU
+        sku_list = SKU.query(SKU.category == product.key).fetch()
+        sku_list_in_warehouse = []
+        for item in sku_list:
+            sku_list_in_warehouse.append(cls.get_or_create(item, warehouse))
+        return sku_list_in_warehouse

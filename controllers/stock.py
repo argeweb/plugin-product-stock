@@ -5,6 +5,7 @@
 # Author: Qi-Liang Wen (温啓良）
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
+from google.appengine.ext import ndb
 from datetime import datetime
 from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
 from argeweb.components.pagination import Pagination
@@ -127,6 +128,8 @@ class Stock(Controller):
 
     @route
     def admin_stock_in(self):
+        self.meta.change_view('json')
+        data = []
         length = self.params.get_integer('length')
         w = self.params.get_ndb_record('warehouse')
         for index in xrange(0, length):
@@ -137,29 +140,54 @@ class Stock(Controller):
                     r.quantity = r.quantity + quantity
                     r.last_in_quantity = r.quantity
                     r.last_in_datetime = datetime.now()
-                    SKUIW_Model.in_warehouse(r, w, quantity)
+                    data.append(SKUIW_Model.in_warehouse(r, w, quantity))
                     r.put()
         self.context['message'] = u'完成'
-        return self.json({'aa': 'bbb'})
+        self.context['data'] = data
 
     @route
     def admin_stock_out(self):
+        self.meta.change_view('json')
         length = self.params.get_integer('length')
         w = self.params.get_ndb_record('warehouse')
+        check_list = []
+        msg = []
+        data = []
         for index in xrange(0, length):
             r = self.params.get_ndb_record('sku-key-%s' % str(index))
             if r is not None:
                 quantity = self.params.get_integer('sku-quantity-%s' % str(index))
-                n = -1
-                if quantity != 0:
-                    n = SKUIW_Model.out_warehouse(r, w, quantity)
-                if n != -1:
-                    r.quantity = r.quantity - quantity
-                    r.last_out_quantity = r.quantity
-                    r.last_out_datetime = datetime.now()
-                    r.put()
+                if quantity > 0:
+                    sku_record = SKUIW_Model.get_or_create(r, w)
+                    c = sku_record.quantity - quantity
+                    if c < 0:
+                        msg.append(u'錯誤 [ %s ] 的數量不足 %s 個，缺少 %s 個' % (r.title, str(quantity), str(-c)))
+                    check_list.append({
+                        'sku': r,
+                        'sku_in_warehouse': sku_record,
+                        'quantity': quantity,
+                        'check': c,
+                        'msg': msg
+                    })
+                    data.append(sku_record)
+        if len(msg) > 0:
+            self.context['message'] = u'<br>\n'.join(msg)
+            self.context['data'] = data
+            return
+        data = []
+        for item in check_list:
+            sku = item['sku']
+            sku_in_warehouse = item['sku_in_warehouse']
+            quantity = item['quantity']
+            sku_in_warehouse.quantity = sku_in_warehouse.quantity - quantity
+            sku_in_warehouse.put()
+            sku.quantity = sku.quantity - quantity
+            sku.last_out_quantity = sku.quantity
+            sku.last_out_datetime = datetime.now()
+            sku.put()
+            data.append(sku_in_warehouse)
         self.context['message'] = u'完成'
-        return self.json({'aa': 'bbb'})
+        self.context['data'] = data
 
     @route
     def admin_list_for_side_panel(self, target=''):
@@ -196,18 +224,31 @@ class Stock(Controller):
         need_to_insert_spec_items = get_need_update_spec_item_list(spec_lists, spec_records)
 
         if do_update:
+            spec_records = []
             for update_item in need_to_insert_spec_items:
                 m = self.meta.Model()
                 m.spec_full_name = update_item
                 m.category = product_record.key
                 m.put()
-            spec_records = self.context[self.scaffold.singular].fetch()
+                spec_records.append(m)
         else:
             if len(need_to_insert_spec_items) > 0:
                 self.context['need_update'] = True
                 self.context['need_to_insert_spec_items'] = need_to_insert_spec_items
         self.context['len_records'] = len(spec_records)
         self.context['spec_records'] = spec_records
+
+    @route
+    def admin_get_sku_detail(self):
+        self.meta.change_view('json')
+        product = self.params.get_ndb_record('product')
+
+        def query_factory(controller):
+            model = controller.meta.Model
+            return model.query(model.category == product.key).order(model.sort)
+
+        self.scaffold.query_factory = query_factory
+        return scaffold.list(self)
 
     @route
     def admin_get_warehouse_detail(self):
@@ -217,7 +258,10 @@ class Stock(Controller):
         if product is None or warehouse is None:
             self.context['data'] = None
             return
-        self.context['data'] = SKUIW_Model.get_all_with_product(product, warehouse)
+        data = SKUIW_Model.get_all_with_product(product, warehouse).fetch()
+        if len(data) <= 0:
+            data = SKUIW_Model.create_sku_by_product(product, warehouse)
+        self.context['data'] = data
 
     @route
     def admin_insert_spec_to_product_records(self, target=''):
