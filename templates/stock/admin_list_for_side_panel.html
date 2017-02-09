@@ -37,42 +37,15 @@
                     {% endfor %}</ul><a href="{{ update_url }}" target="aside_iframe" class="btn">更新</a>{% endif %}
                 </div>
                 <ul class="sidebar-list">
-                    {% for item in spec_records %}{% if item.is_low_stock_level %}
-                    <li style="border-bottom: none;">
-                        <a href="{{ uri_action_link('edit', item=item) }}" target="aside_iframe">
-                            <div class="small pull-right m-t-xs moment-from-now" data-from-now="{{ print_value(item.modified) }}"></div>
-                            <h4 id="spec-name-{{ print_key(item) }}">{{ item.spec_full_name }}</h4>
-                            <div class="small text-muted m-t-xs">庫存： {{ item.p_quantity }}%
-                                ( {{ item.quantity }} / {{ item.last_in_quantity }} )</div>
-                            <div class="progress progress-mini">
-                                <div style="width: {{ item.p_quantity }}%;" class="progress-bar progress-bar-danger"></div>
-                            </div>
-                        </a>
-                    </li>
-                    {% endif %}{% endfor %}
-
-                    {% for item in spec_records %}{% if not item.is_low_stock_level %}
-                    <li style="border-bottom: none;">
-                        <a href="{{ uri_action_link('edit', item=item) }}" target="aside_iframe">
-                            <div class="small pull-right m-t-xs moment-from-now" data-from-now="{{ print_value(item.modified) }}"></div>
-                            <h4 id="spec-name-{{ print_key(item) }}">{{ item.spec_full_name }}</h4>
-                            <div class="small text-muted m-t-xs">庫存： {{ item.p_quantity }}%
-                                ( {{ item.quantity }} / {{ item.last_in_quantity }} )</div>
-                            <div class="progress progress-mini">
-                                <div style="width: {{ item.p_quantity }}%;" class="progress-bar"></div>
-                            </div>
-                        </a>
-                    </li>
-                    {% endif %}{% endfor %}
-
                     <li style="border-bottom: none;" v-for="item in spec_p">
                         <a :href="item.url" target="aside_iframe">
                             <div class="small pull-right m-t-xs moment-from-now" :data-from-now="item.modified"></div>
-                            <h4 :id="'spec-name-' + item.key">{{item.spec_full_name}}</h4>
+                            <h4 :id="'spec-name-' + item.__key__">{{item.spec_full_name}}{{item.is_low_stock_level}}</h4>
                             <div class="small text-muted m-t-xs">庫存： {{item.p_quantity}}%
-                                ( {{item.quantity}} / {{item.last_in_quantity}} / {{item.p_quantity}})</div>
+                                ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}})</div>
                             <div class="progress progress-mini">
-                                <div :style="'width:' + item.p_quantity + '%'"  :class="[item.is_low_stock_level ? 'progress-bar-danger' : '', 'progress-bar']"></div>
+                                <div :style="'width:' + item.p_quantity + '%'"
+                                     :class="[item.low_level ? 'progress-bar-danger' : '' ,'progress-bar']"></div>
                             </div>
                         </a>
                     </li>
@@ -92,11 +65,8 @@
                     <h4>入庫摘要</h4>
                     <textarea name="remake" class="form-control"></textarea>
                     <div style="height: 22px;margin: 6px 0 0 0;">
-                        {% if has_record %}
-                        <a id="btn-in-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">入庫</a>
-                        {% else %}
-                        <span class="btn pull-right" style="color: #aaa;">目前無法使用</span>
-                        {% endif %}
+                        {% if has_record %}<a id="btn-in-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">入庫</a>
+                        {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
                     </div>
                     <input type="hidden" name="op-type" value="product" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
@@ -134,11 +104,8 @@
                     <h4>出庫摘要</h4>
                     <textarea name="remake" class="form-control"></textarea>
                     <div style="height: 22px;margin: 6px 0 0 0;">
-                        {% if has_record %}
-                        <a id="btn-out-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
-                        {% else %}
-                        <span class="btn pull-right" style="color: #aaa;">目前無法使用</span>
-                        {% endif %}
+                        {% if has_record %}<a id="btn-out-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
+                        {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
                     </div>
                     <input type="hidden" name="op-type" value="product" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
@@ -174,14 +141,14 @@
     (function(page){
         var p = sortByKey([{% for item in spec_records %}{
                 "__key__": "{{ print_key(item) }}",
-                "key": "spec-name-{{ print_key(item) }}",
                 "spec_full_name": "{{ item.spec_full_name }}",
-                "is_low_stock_level": {% if item.is_low_stock_level %}true{% else %}false{% endif %},
+                "low_level": {% if item.is_low_stock_level %}true{% else %}false{% endif %},
                 "url": "{{ uri_action_link('edit', item=item) }}",
                 "modified": "{{ item.modified }}",
                 "quantity": {{ item.quantity }},
                 "p_quantity": {{ item.p_quantity }},
-                "last_in_quantity": {{ item.last_in_quantity }}
+                "last_in_quantity": {% if item.last_in_quantity < item.low_stock_quantity %}{{ item.low_stock_quantity }}{% else %}{{ item.last_in_quantity }}{% endif %},
+                "low_level_text": {% if item.last_in_quantity < item.low_stock_quantity %}"庫存警戒 "{% else %}""{% endif %}
             },{% endfor %}], "spec_full_name");
         page['app'] = new Vue({
             el: '#app',
@@ -236,8 +203,15 @@
         page["replace_spec_p_data"] = function(data){
             $.map(data, function(item, i){
                 let is_find = -1;
+                let quantity = item.quantity || 0;
+                let low_stock_quantity = item.low_stock_quantity || -1;
+                item.low_level_text = "";
+                if (low_stock_quantity > item.last_in_quantity){
+                    item.low_level_text = "庫存警戒 ";
+                    item.last_in_quantity = low_stock_quantity;
+                }
                 item.p_quantity = item.quantity / item.last_in_quantity * 100.0;
-                item.is_low_stock_level = (item.is_low_stock_level === "True");
+                item.low_level = quantity <= low_stock_quantity;
                 for(let j=0;j<page['app'].spec_p.length;j++){
                     if (page['app'].spec_p[j].__key__ == item.__key__){
                         is_find = j;
@@ -247,7 +221,9 @@
                     page['app'].spec_p[is_find].quantity = item.quantity;
                     page['app'].spec_p[is_find].p_quantity = item.p_quantity;
                     page['app'].spec_p[is_find].last_in_quantity = item.last_in_quantity;
+                    page['app'].spec_p[is_find].low_level = item.low_level;
                     page['app'].spec_p[is_find].modified = item.modified;
+                    page['app'].spec_p[is_find].low_level_text = item.low_level_text;
                 }else{
                     page['app'].spec_p.push(item);
                 }

@@ -81,12 +81,14 @@ class StockKeepingUnitModel(BasicModel):
         last_in_quantity = self.last_in_quantity if self.last_in_quantity is not None else 0
         if last_in_quantity == 0:
             return 0
+        if last_in_quantity < self.low_stock_quantity:
+            last_in_quantity = self.low_stock_quantity
         return int((float(quantity) / float(last_in_quantity)) * 10000) / 100.0
 
     @property
     def is_low_stock_level(self):
         quantity = self.quantity if self.quantity is not None else 0
-        low_stock_quantity = self.low_stock_quantity if self.low_stock_quantity is not None else 0
+        low_stock_quantity = self.low_stock_quantity if self.low_stock_quantity is not None else -1
         return quantity <= low_stock_quantity
 
     @classmethod
