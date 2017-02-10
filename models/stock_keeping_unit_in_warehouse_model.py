@@ -12,6 +12,7 @@ from plugins.product.models.product_model import ProductModel, ProductCategoryMo
 from stock_keeping_unit_model import StockKeepingUnitModel
 from warehouse_model import WarehouseModel
 
+
 class StockKeepingUnitInWarehouseModel(BasicModel):
     class Meta:
         label_name = {
