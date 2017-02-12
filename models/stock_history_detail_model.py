@@ -8,7 +8,6 @@
 
 from argeweb import BasicModel
 from argeweb import Fields
-from plugins.product.models.product_model import ProductModel, ProductCategoryModel
 from stock_history_model import StockHistoryModel
 
 

@@ -98,31 +98,23 @@ class Stock(Controller):
         display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
         disabled_in_form = ('category', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
 
-    @route_menu(list_name=u'backend', text=u'庫存', sort=1201, group=u'庫存管理')
+    @route_menu(list_name=u'backend', text=u'出庫', sort=1203, group=u'產品維護', need_hr=True)
     def admin_list(self):
         return scaffold.list(self)
 
-    @route_menu(list_name=u'backend', text=u'出庫', sort=1203, group=u'庫存管理', need_hr=True)
+    @route_menu(list_name=u'backend', text=u'入庫', sort=1204, group=u'產品維護')
     def admin_list(self):
         return scaffold.list(self)
 
-    @route_menu(list_name=u'backend', text=u'入庫', sort=1204, group=u'庫存管理')
+    @route_menu(list_name=u'backend', text=u'盤點', sort=1205, group=u'產品維護')
     def admin_list(self):
         return scaffold.list(self)
 
-    @route_menu(list_name=u'backend', text=u'盤點', sort=1205, group=u'庫存管理')
+    @route_menu(list_name=u'backend', text=u'供應商設置', sort=9932, group=u'系統設定')
     def admin_list(self):
         return scaffold.list(self)
 
-    @route_menu(list_name=u'backend', text=u'報表', sort=1207, group=u'庫存管理', need_hr=True)
-    def admin_list(self):
-        return scaffold.list(self)
-
-    @route_menu(list_name=u'backend', text=u'供應商設置', sort=1210, group=u'庫存管理', need_hr=True)
-    def admin_list(self):
-        return scaffold.list(self)
-
-    @route_menu(list_name=u'backend', text=u'出入庫性質設置', sort=1211, group=u'庫存管理')
+    @route_menu(list_name=u'backend', text=u'出入庫性質設置', sort=9933, group=u'系統設定')
     def admin_list(self):
         return scaffold.list(self)
 
