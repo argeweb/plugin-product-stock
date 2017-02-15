@@ -110,11 +110,11 @@ class Stock(Controller):
     def admin_list(self):
         return scaffold.list(self)
 
-    @route_menu(list_name=u'backend', text=u'供應商設置', sort=9932, group=u'系統設定')
+    @route_menu(list_name=u'backend', text=u'供應商設置', sort=9933, group=u'系統設定')
     def admin_list(self):
         return scaffold.list(self)
 
-    @route_menu(list_name=u'backend', text=u'出入庫性質設置', sort=9933, group=u'系統設定')
+    @route_menu(list_name=u'backend', text=u'出入庫性質設置', sort=9934, group=u'系統設定')
     def admin_list(self):
         return scaffold.list(self)
 

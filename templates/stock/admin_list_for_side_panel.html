@@ -210,7 +210,7 @@
                     item.low_level_text = "庫存警戒 ";
                     item.last_in_quantity = low_stock_quantity;
                 }
-                item.p_quantity = item.quantity / item.last_in_quantity * 100.0;
+                item.p_quantity = parseInt(item.quantity / item.last_in_quantity * 10000) / 100.0;
                 item.low_level = quantity <= low_stock_quantity;
                 for(let j=0;j<page['app'].spec_p.length;j++){
                     if (page['app'].spec_p[j].__key__ == item.__key__){
@@ -235,7 +235,7 @@
             if (warehouse === "undefined" || typeof warehouse === "undefined") return;
             json_async("{{ uri_action_link('get_warehouse_detail') }}",
                     "product={{ print_key(product) }}&warehouse=" + warehouse, function(result){
-                page["replace_spec_data"](result.data);
+                page["replace_spec_data"](result);
             });
         };
         page["load_sku"] = function(){
