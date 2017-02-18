@@ -39,7 +39,7 @@
                 <ul class="sidebar-list">
                     <li style="border-bottom: none;" v-for="item in spec_p">
                         <a :href="item.url" target="aside_iframe">
-                            <div class="small pull-right m-t-xs moment-from-now" :data-from-now="item.modified"></div>
+                            <div class="small pull-right m-t-xs moment-vue-from-now" :data-vue-from-now="item.modified"></div>
                             <h4 :id="'spec-name-' + item.__key__">{{item.spec_full_name}}{{item.is_low_stock_level}}</h4>
                             <div class="small text-muted m-t-xs">庫存： {{item.p_quantity}}%
                                 ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}})</div>
@@ -144,7 +144,7 @@
                 "spec_full_name": "{{ item.spec_full_name }}",
                 "low_level": {% if item.is_low_stock_level %}true{% else %}false{% endif %},
                 "url": "{{ uri_action_link('edit', item=item) }}",
-                "modified": "{{ item.modified }}",
+                "modified": "{{ print_value(item.modified) }}",
                 "quantity": {{ item.quantity }},
                 "p_quantity": {{ item.p_quantity }},
                 "last_in_quantity": {% if item.last_in_quantity < item.low_stock_quantity %}{{ item.low_stock_quantity }}{% else %}{{ item.last_in_quantity }}{% endif %},
@@ -180,6 +180,13 @@
                 return ((x < y) ? -1 : ((x > y) ? 1 : 0));
             });
         }
+        var convertUITimeTOLocalTime = function(uitime, hours){
+            hours = hours || 8;
+            var d1 = new Date(uitime), d2 = new Date(d1);
+            d2.setHours(d1.getHours() - 0);
+            return d2.getFullYear()  + "-" + (d2.getMonth()+1) + "-" + d2.getDate() + " " +
+                    d2.getHours() + ":" + d2.getMinutes() + ":" + d2.getSeconds();
+        };
         page["replace_spec_data"] = function(data){
             $.map(data, function(item, i){
                 item.index = i;
@@ -192,13 +199,17 @@
                         is_find = j;
                     }
                 }
+                item.modified = convertUITimeTOLocalTime(item.modified.isoformat);
+
                 if (is_find >= 0){
+                    page['app'].spec[is_find].modified = item.modified;
                     page['app'].spec[is_find].quantity = item.quantity;
                 }else{
                     page['app'].spec.push(item);
                 }
             });
             page['app'].spec = sortByKey(page['app'].spec, "spec_full_name");
+            setTimeout(refreshMoment, 500);
         };
         page["replace_spec_p_data"] = function(data){
             $.map(data, function(item, i){
@@ -211,12 +222,14 @@
                     item.last_in_quantity = low_stock_quantity;
                 }
                 item.p_quantity = parseInt(item.quantity / item.last_in_quantity * 10000) / 100.0;
+                if (isNaN(item.p_quantity)) item.p_quantity = 0.0;
                 item.low_level = quantity <= low_stock_quantity;
                 for(let j=0;j<page['app'].spec_p.length;j++){
                     if (page['app'].spec_p[j].__key__ == item.__key__){
                         is_find = j;
                     }
                 }
+                item.modified = convertUITimeTOLocalTime(item.modified.isoformat);
                 if (is_find >= 0){
                     page['app'].spec_p[is_find].quantity = item.quantity;
                     page['app'].spec_p[is_find].p_quantity = item.p_quantity;
@@ -229,6 +242,7 @@
                 }
             });
             page['app'].spec_p = sortByKey(page['app'].spec_p, "spec_full_name");
+            setTimeout(refreshMoment, 500);
         };
         {% if has_record %}
         page["load_warehouse_detail"] = function(warehouse){
