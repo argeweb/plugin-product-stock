@@ -1,0 +1,54 @@
+{% extends "backend/form.html" %}
+{% block layout_header %}{% endblock %}
+{% block layout_content %}
+    {%- set list = context[scaffolding.plural] -%}
+    <div class="row" style="margin: 25px">
+        {% for item in list %}
+        <div class="col-sm-4">
+            <div class="social-feed-separated">
+                <div class="social-avatar">
+                    {% set user = item.user.get() %}
+                    {% if user %}
+                    <a href=""><img alt="image" src="{{ user.avatar }}"></a>
+                    {% else %}
+                    <a href=""><img alt="image" src=""></a>
+                    {% endif %}
+                </div>
+
+                <div class="social-feed-box">
+                    <div class="social-avatar">
+                        <a href="#">
+                            {{ item.user_name }}
+                        </a>
+                        <small class="text-muted"> 於 {{ print_value(item.created) }} 進行了 {{ item.operation }}</small>
+                    </div>
+                    <div class="social-body">
+                        <p>{{ item.remake }}</p>
+                    </div>
+                    <div class="social-footer">{% for detail in item.details %}
+                        <div class="social-comment">
+                            <a href="" class="pull-left">
+                                <img alt="image" src="{{ detail.product_image }}" style="max-width: 32px; max-height: 32px;">
+                            </a>
+
+                            <div class="media-body">
+                                <small class="pull-right">{{ detail.sku_full_name }}</small>
+                                <a href="#">{{ detail.product_name }}</a> {{ detail.spec_full_name }}<br>
+                                {% if detail.operation_type == '入庫' %}入庫 <a href="#" class="small">{{ detail.quantity }}</a> 個至 {{ detail.warehouse }}{% endif %}
+                                {% if detail.operation_type == '出庫' %}從 {{ detail.warehouse }} 出庫 <a href="#" class="small">{{ detail.quantity }}</a> 個{% endif %}
+                                {% if detail.warehouse_target != '無' %}{{ detail.operation_type }} 從 {{ detail.warehouse }} 至 {{ detail.warehouse_target }}{% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}
+
+{% block form_actions %}{% endblock %}
+{% block layout_buttons %}{% endblock %}

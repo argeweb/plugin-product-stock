@@ -19,7 +19,7 @@ class StockHistory(Controller):
 
     class Scaffold:
         # display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
-        disabled_in_form = ('category', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
+        disabled_in_form = ('user')
 
     @route_menu(list_name=u'backend', text=u'庫存記錄', sort=1207, group=u'產品維護', need_hr=True)
     def admin_list(self):

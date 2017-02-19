@@ -21,9 +21,9 @@ class StockKeepingUnitInWarehouseModel(BasicModel):
             'sku_full_name': u'sku 編號'
         }
 
-    sku = Fields.CategoryProperty(kind=StockKeepingUnitModel, verbose_name=u'所屬 SKU')
-    warehouse = Fields.CategoryProperty(kind=WarehouseModel, verbose_name=u'所屬倉庫')
-    product = Fields.CategoryProperty(kind=ProductModel, verbose_name=u'所屬產品')
+    sku = Fields.KeyProperty(kind=StockKeepingUnitModel, verbose_name=u'所屬 SKU')
+    warehouse = Fields.KeyProperty(kind=WarehouseModel, verbose_name=u'所屬倉庫')
+    product = Fields.KeyProperty(kind=ProductModel, verbose_name=u'所屬產品')
     quantity = Fields.IntegerProperty(verbose_name=u'在庫數量', default=0)
 
     @classmethod

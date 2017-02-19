@@ -120,15 +120,20 @@ class Stock(Controller):
 
     @route
     def admin_stock_in(self):
+        from ..models.stock_history_model import create_history
+        from ..models.stock_history_detail_model import create_history_detail
         self.meta.change_view('json')
         data = []
         length = self.params.get_integer('length')
+        remake = self.params.get_string('remake')
         w = self.params.get_ndb_record('warehouse')
+        history = create_history(self.application_user, u'產品入庫', remake)
         for index in xrange(0, length):
             r = self.params.get_ndb_record('sku-key-%s' % str(index))
             if r is not None:
                 quantity = self.params.get_integer('sku-quantity-%s' % str(index))
                 if quantity != 0:
+                    create_history_detail(history, r, u'入庫', quantity, w)
                     r.quantity = r.quantity + quantity
                     r.last_in_quantity = r.quantity
                     r.last_in_datetime = datetime.now()
@@ -139,8 +144,10 @@ class Stock(Controller):
 
     @route
     def admin_stock_out(self):
+        from ..models.stock_history_model import create_history
         self.meta.change_view('json')
         length = self.params.get_integer('length')
+        remake = self.params.get_string('remake')
         w = self.params.get_ndb_record('warehouse')
         check_list = []
         msg = []
@@ -163,10 +170,12 @@ class Stock(Controller):
                     })
                     data.append(sku_record)
         if len(msg) > 0:
+            create_history(self.application_user, u'產品出庫', remake, False, u'<br>\n'.join(msg))
             self.context['message'] = u'<br>\n'.join(msg)
             self.context['data'] = data
             return
         data = []
+        history = create_history(self.application_user, u'產品出庫', remake)
         for item in check_list:
             sku = item['sku']
             sku_in_warehouse = item['sku_in_warehouse']
