@@ -90,9 +90,9 @@ def get_need_update_spec_item_list(new_spec_list, old_spec_records):
 
 class Stock(Controller):
     class Meta:
+        Model = StockKeepingUnitModel
         components = (scaffold.Scaffolding, Pagination, Search)
         pagination_limit = 10
-        Model = StockKeepingUnitModel
 
     class Scaffold:
         display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
@@ -107,14 +107,6 @@ class Stock(Controller):
         return scaffold.list(self)
 
     @route_menu(list_name=u'backend', text=u'盤點', sort=1205, group=u'產品維護')
-    def admin_list(self):
-        return scaffold.list(self)
-
-    @route_menu(list_name=u'backend', text=u'供應商設置', sort=9933, group=u'系統設定')
-    def admin_list(self):
-        return scaffold.list(self)
-
-    @route_menu(list_name=u'backend', text=u'出入庫性質設置', sort=9934, group=u'系統設定')
     def admin_list(self):
         return scaffold.list(self)
 
@@ -238,6 +230,17 @@ class Stock(Controller):
                 self.context['need_to_insert_spec_items'] = need_to_insert_spec_items
         self.context['len_records'] = len(spec_records)
         self.context['spec_records'] = spec_records
+
+    @route
+    def get_sku_detail(self):
+        self.meta.change_view('json')
+        product = self.params.get_ndb_record('product')
+        if product is None or product.is_enable is False:
+            return self.json([])
+
+        model = self.meta.Model
+        query = model.query(model.category == product.key).order(model.sort)
+        return self.json(query.fetch())
 
     @route
     def admin_get_sku_detail(self):

@@ -31,6 +31,7 @@ class StockHistoryModel(BasicModel):
         from stock_history_detail_model import StockHistoryDetailModel as Detail
         return Detail.query(Detail.history == self.key).order(-Detail.sort)
 
+
 def create_history(user, operation, remake=u'', status=True, result=u'完成'):
     r = StockHistoryModel()
     r.user = user.key

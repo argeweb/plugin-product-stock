@@ -8,7 +8,7 @@
 
 from argeweb import BasicModel
 from argeweb import Fields
-from plugins.product.models.product_model import ProductModel, ProductCategoryModel
+from plugins.product.models.product_model import ProductModel
 
 
 class StockKeepingUnitModel(BasicModel):
@@ -32,6 +32,9 @@ class StockKeepingUnitModel(BasicModel):
         return '%s%s' % (sku_prev_name, sku_post_name)
 
     spec_full_name = Fields.StringProperty(verbose_name=u'完整規格名稱')
+    image = Fields.ImageProperty(verbose_name=u'圖片')
+    use_price = Fields.BooleanProperty(verbose_name=u'使用 sku 銷售價格', default=False)
+    price = Fields.FloatProperty(verbose_name=u'sku 銷售價格', default=-1)
     quantity = Fields.IntegerProperty(verbose_name=u'現存數量', default=0)
     quantity_in_order = Fields.IntegerProperty(verbose_name=u'訂單預估數量', default=0)
     low_stock_quantity = Fields.IntegerProperty(verbose_name=u'庫存警戒線', default=-1)
@@ -59,7 +62,6 @@ class StockKeepingUnitModel(BasicModel):
     spec_value_3 = Fields.HiddenProperty(verbose_name=u'規格值 3')
     spec_value_4 = Fields.HiddenProperty(verbose_name=u'規格值 4')
     spec_value_5 = Fields.HiddenProperty(verbose_name=u'規格值 5')
-    # TODO 庫存變動時的歷史記錄
 
     def before_put(self):
         sku_prev_name = u''
@@ -83,7 +85,7 @@ class StockKeepingUnitModel(BasicModel):
         return self.spec_full_name
 
     @property
-    def p_quantity(self):
+    def quantity_percent(self):
         quantity = self.quantity if self.quantity is not None else 0
         last_in_quantity = self.last_in_quantity if self.last_in_quantity is not None else 0
         if last_in_quantity == 0:
@@ -102,7 +104,7 @@ class StockKeepingUnitModel(BasicModel):
     def all_enable(cls, category=None, *args, **kwargs):
         cat = None
         if category:
-            cat = ProductCategoryModel.find_by_name(category)
+            cat = ProductModel.find_by_name(category)
         if cat is None:
             return cls.query(cls.is_enable==True).order(-cls.sort)
         else:

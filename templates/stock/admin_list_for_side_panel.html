@@ -1,5 +1,4 @@
 {% extends "backend/form.html" %}
-{% block layout_header %}{% endblock %}
 {% block layout_content %}
     <div class="sidebar-container" style="width: auto; height: 100%;" id="app">
         <ul class="nav nav-tabs navs-3">
@@ -32,20 +31,24 @@
                 <div class="sidebar-title">
                     <h3>{{ product.title }}</h3>
                     <small>應有 {{ total }} 種規格，目前共有 {{ len_records }} 種。</small>
-                    {% if need_update %}下列為需要新增的規格，<ul>{% for item in need_to_insert_spec_items %}
+                    {% if need_update %}下列為需要新增的規格，<br><br><ul>{% for item in need_to_insert_spec_items %}
                         <li>{{ item }}</li>
-                    {% endfor %}</ul><a href="{{ update_url }}" target="aside_iframe" class="btn">更新</a>{% endif %}
+                    {% endfor %}</ul>
+                        <div class="alert alert-warning">
+                        注意，規格建立後無法進行刪除，請確認項目的內容是否正確
+                        </div>
+                        <a href="{{ update_url }}" target="aside_iframe" class="btn">更新</a>{% endif %}
                 </div>
                 <ul class="sidebar-list">
                     <li style="border-bottom: none;" v-for="item in spec_p">
                         <a :href="item.url" target="aside_iframe">
                             <div class="small pull-right m-t-xs moment-vue-from-now" :data-vue-from-now="item.modified"></div>
                             <h4 :id="'spec-name-' + item.__key__">{{item.spec_full_name}}{{item.is_low_stock_level}}</h4>
-                            <div class="small text-muted m-t-xs">庫存： {{item.p_quantity}}%
-                                ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}}) <br>
-                            訂單： {{item.quantity_in_order}}</div>
+                            <div class="small text-muted m-t-xs">訂單： {{item.quantity_in_order}} <br>
+                                庫存： {{item.quantity_percent}}% ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}})
+                            </div>
                             <div class="progress progress-mini">
-                                <div :style="'width:' + item.p_quantity + '%'"
+                                <div :style="'width:' + item.quantity_percent + '%'"
                                      :class="[item.low_level ? 'progress-bar-danger' : '' ,'progress-bar']"></div>
                             </div>
                         </a>
@@ -140,7 +143,7 @@
 {% block layout_scripts %}
 <script type="text/javascript">
     (function(page){
-        var p = sortByKey([{% for item in spec_records %}{
+        var p = methods.sortByKey([{% for item in spec_records %}{
                 "__key__": "{{ print_key(item) }}",
                 "spec_full_name": "{{ item.spec_full_name }}",
                 "low_level": {% if item.is_low_stock_level %}true{% else %}false{% endif %},
@@ -148,7 +151,7 @@
                 "modified": "{{ print_value(item.modified) }}",
                 "quantity": {{ item.quantity }},
                 "quantity_in_order": {{ item.quantity_in_order }},
-                "p_quantity": {{ item.p_quantity }},
+                "quantity_percent": {{ item.quantity_percent }},
                 "last_in_quantity": {% if item.last_in_quantity < item.low_stock_quantity %}{{ item.low_stock_quantity }}{% else %}{{ item.last_in_quantity }}{% endif %},
                 "low_level_text": {% if item.last_in_quantity < item.low_stock_quantity %}"庫存警戒 "{% else %}""{% endif %}
             },{% endfor %}], "spec_full_name");
@@ -175,20 +178,7 @@
                 page["load_sku"]();
             });
         });
-        function sortByKey(array, key) {
-            return array.sort(function (a, b) {
-                var x = a[key];
-                var y = b[key];
-                return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-            });
-        }
-        var convertUITimeTOLocalTime = function(uitime, hours){
-            hours = hours || 8;
-            var d1 = new Date(uitime), d2 = new Date(d1);
-            d2.setHours(d1.getHours() - 0);
-            return d2.getFullYear()  + "-" + (d2.getMonth()+1) + "-" + d2.getDate() + " " +
-                    d2.getHours() + ":" + d2.getMinutes() + ":" + d2.getSeconds();
-        };
+
         page["replace_spec_data"] = function(data){
             $.map(data, function(item, i){
                 item.index = i;
@@ -201,7 +191,7 @@
                         is_find = j;
                     }
                 }
-                item.modified = convertUITimeTOLocalTime(item.modified.isoformat);
+                item.modified = methods.convertUITimeTOLocalTime(item.modified.isoformat);
 
                 if (is_find >= 0){
                     page['app'].spec[is_find].modified = item.modified;
@@ -210,7 +200,7 @@
                     page['app'].spec.push(item);
                 }
             });
-            page['app'].spec = sortByKey(page['app'].spec, "spec_full_name");
+            page['app'].spec = methods.sortByKey(page['app'].spec, "spec_full_name");
             setTimeout(refreshMoment, 500);
         };
         page["replace_spec_p_data"] = function(data){
@@ -223,19 +213,19 @@
                     item.low_level_text = "庫存警戒 ";
                     item.last_in_quantity = low_stock_quantity;
                 }
-                item.p_quantity = parseInt(item.quantity / item.last_in_quantity * 10000) / 100.0;
-                if (isNaN(item.p_quantity)) item.p_quantity = 0.0;
+                item.quantity_percent = parseInt(item.quantity / item.last_in_quantity * 10000) / 100.0;
+                if (isNaN(item.quantity_percent)) item.quantity_percent = 0.0;
                 item.low_level = quantity <= low_stock_quantity;
                 for(let j=0;j<page['app'].spec_p.length;j++){
                     if (page['app'].spec_p[j].__key__ == item.__key__){
                         is_find = j;
                     }
                 }
-                item.modified = convertUITimeTOLocalTime(item.modified.isoformat);
+                item.modified = methods.convertUITimeTOLocalTime(item.modified.isoformat);
                 if (is_find >= 0){
                     page['app'].spec_p[is_find].quantity = item.quantity;
                     page['app'].spec_p[is_find].quantity_in_order = item.quantity_in_order;
-                    page['app'].spec_p[is_find].p_quantity = item.p_quantity;
+                    page['app'].spec_p[is_find].quantity_percent = item.quantity_percent;
                     page['app'].spec_p[is_find].last_in_quantity = item.last_in_quantity;
                     page['app'].spec_p[is_find].low_level = item.low_level;
                     page['app'].spec_p[is_find].modified = item.modified;
@@ -244,7 +234,7 @@
                     page['app'].spec_p.push(item);
                 }
             });
-            page['app'].spec_p = sortByKey(page['app'].spec_p, "spec_full_name");
+            page['app'].spec_p = methods.sortByKey(page['app'].spec_p, "spec_full_name");
             setTimeout(refreshMoment, 500);
         };
         {% if has_record %}

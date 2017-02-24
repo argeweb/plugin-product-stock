@@ -19,7 +19,6 @@ class Warehouse(Controller):
     class Scaffold:
         display_in_list = ('name', 'title', 'address', 'telephone')
 
-
-    @route_menu(list_name=u'backend', text=u'倉庫設置', sort=9932, group=u'系統設定', need_hr=True)
+    @route_menu(list_name=u'backend', text=u'倉庫設置', sort=9932, group=u'系統設定')
     def admin_list(self):
         return scaffold.list(self)
