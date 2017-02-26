@@ -32,7 +32,7 @@ class StockKeepingUnitInWarehouseModel(BasicModel):
         if record is None:
             record = cls()
             record.sku = sku.key
-            record.product = sku.category
+            record.product = sku.product
             record.warehouse = warehouse.key
             record.quantity = 0
         record.quantity = int(record.quantity) + int(quantity)
@@ -53,7 +53,7 @@ class StockKeepingUnitInWarehouseModel(BasicModel):
         if record is None:
             record = cls()
             record.sku = sku.key
-            record.product = sku.category
+            record.product = sku.product
             record.warehouse = warehouse.key
             record.quantity = quantity
         record.put()
@@ -69,7 +69,7 @@ class StockKeepingUnitInWarehouseModel(BasicModel):
     @classmethod
     def create_sku_by_product(cls, product, warehouse=None):
         from stock_keeping_unit_model import StockKeepingUnitModel as SKU
-        sku_list = SKU.query(SKU.category == product.key).fetch()
+        sku_list = SKU.query(SKU.product == product.key).fetch()
         sku_list_in_warehouse = []
         for item in sku_list:
             sku_list_in_warehouse.append(cls.get_or_create(item, warehouse))

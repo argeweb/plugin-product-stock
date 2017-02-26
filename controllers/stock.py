@@ -95,8 +95,8 @@ class Stock(Controller):
         pagination_limit = 10
 
     class Scaffold:
-        display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
-        disabled_in_form = ('category', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
+        display_in_list = ('sku_full_name', 'product', 'title', 'quantity', 'is_enable', 'can_be_purchased')
+        disabled_in_form = ('product', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
 
     @route_menu(list_name=u'backend', text=u'出庫', sort=1203, group=u'產品維護', need_hr=True)
     def admin_list(self):
@@ -208,7 +208,7 @@ class Stock(Controller):
         self.context['has_record'] = True
         def query_factory(controller):
             model = controller.meta.Model
-            return model.query(model.category == product_record.key).order(model.sort)
+            return model.query(model.product == product_record.key).order(model.sort)
 
         self.scaffold.query_factory = query_factory
         scaffold.list(self)
@@ -221,7 +221,7 @@ class Stock(Controller):
             for update_item in need_to_insert_spec_items:
                 m = self.meta.Model()
                 m.spec_full_name = update_item
-                m.category = product_record.key
+                m.product = product_record.key
                 m.put()
                 spec_records.append(m)
         else:
@@ -239,7 +239,7 @@ class Stock(Controller):
             return self.json([])
 
         model = self.meta.Model
-        query = model.query(model.category == product.key).order(model.sort)
+        query = model.query(model.product == product.key).order(model.sort)
         return self.json(query.fetch())
 
     @route
@@ -249,7 +249,7 @@ class Stock(Controller):
 
         def query_factory(controller):
             model = controller.meta.Model
-            return model.query(model.category == product.key).order(model.sort)
+            return model.query(model.product == product.key).order(model.sort)
 
         self.scaffold.query_factory = query_factory
         return scaffold.list(self)

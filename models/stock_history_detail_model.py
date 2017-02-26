@@ -30,7 +30,7 @@ class StockHistoryDetailModel(BasicModel):
 
 
 def create_history_detail(history, sku, operation_type, quantity, warehouse, warehouse_target=None):
-    product = sku.category.get()
+    product = sku.product.get()
     r = StockHistoryDetailModel()
     r.history = history.key
     r.product_name = product.title

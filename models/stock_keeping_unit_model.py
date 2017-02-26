@@ -36,7 +36,8 @@ class StockKeepingUnitModel(BasicModel):
     use_price = Fields.BooleanProperty(verbose_name=u'使用 sku 銷售價格', default=False)
     price = Fields.FloatProperty(verbose_name=u'sku 銷售價格', default=-1)
     quantity = Fields.IntegerProperty(verbose_name=u'現存數量', default=0)
-    quantity_in_order = Fields.IntegerProperty(verbose_name=u'訂單預估數量', default=0)
+    estimate = Fields.IntegerProperty(verbose_name=u'預估數量', default=0)
+    pre_order_quantity = Fields.IntegerProperty(verbose_name=u'預購數量', default=0)
     low_stock_quantity = Fields.IntegerProperty(verbose_name=u'庫存警戒線', default=-1)
     last_in_quantity = Fields.IntegerProperty(verbose_name=u'最後入庫數量', default=0)
     last_in_datetime = Fields.DateTimeProperty(verbose_name=u'最後入庫時間', auto_now_add=True)
@@ -51,7 +52,7 @@ class StockKeepingUnitModel(BasicModel):
 
     use_automatic_increment = Fields.BooleanProperty(verbose_name=u'自動增量', default=False)
     automatic_increment_quantity = Fields.IntegerProperty(verbose_name=u'增量的數量', default=0)
-    category = Fields.KeyProperty(verbose_name=u'所屬產品', kind=ProductModel)
+    product = Fields.KeyProperty(verbose_name=u'所屬產品', kind=ProductModel)
     spec_name_1 = Fields.HiddenProperty(verbose_name=u'規格名稱 1')
     spec_name_2 = Fields.HiddenProperty(verbose_name=u'規格名稱 2')
     spec_name_3 = Fields.HiddenProperty(verbose_name=u'規格名稱 3')
@@ -65,7 +66,7 @@ class StockKeepingUnitModel(BasicModel):
 
     def before_put(self):
         sku_prev_name = u''
-        cat = self.category
+        cat = self.product
         if cat is not None:
             try:
                 cat = cat.get()
@@ -101,11 +102,11 @@ class StockKeepingUnitModel(BasicModel):
         return quantity <= low_stock_quantity
 
     @classmethod
-    def all_enable(cls, category=None, *args, **kwargs):
+    def all_enable(cls, product=None, *args, **kwargs):
         cat = None
-        if category:
-            cat = ProductModel.find_by_name(category)
+        if product:
+            cat = ProductModel.find_by_name(product)
         if cat is None:
             return cls.query(cls.is_enable==True).order(-cls.sort)
         else:
-            return cls.query(cls.category==cat.key, cls.is_enable==True).order(-cls.sort)
+            return cls.query(cls.product==cat.key, cls.is_enable==True).order(-cls.sort)
