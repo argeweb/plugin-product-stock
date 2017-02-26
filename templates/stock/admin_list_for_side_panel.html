@@ -1,4 +1,5 @@
 {% extends "backend/form.html" %}
+{% block layout_header %}{% endblock %}
 {% block layout_content %}
     <div class="sidebar-container" style="width: auto; height: 100%;" id="app">
         <ul class="nav nav-tabs navs-3">
@@ -44,8 +45,11 @@
                         <a :href="item.url" target="aside_iframe">
                             <div class="small pull-right m-t-xs moment-vue-from-now" :data-vue-from-now="item.modified"></div>
                             <h4 :id="'spec-name-' + item.__key__">{{item.spec_full_name}}{{item.is_low_stock_level}}</h4>
-                            <div class="small text-muted m-t-xs">訂單： {{item.quantity_in_order}} <br>
-                                庫存： {{item.quantity_percent}}% ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}})
+                            <div class="small text-muted m-t-xs">
+                                估量： <span style="width: 30px; display: inline-block;">{{item.estimate +  item.pre_order_quantity }}</span>
+                                ( {{item.pre_order_quantity}} + {{item.estimate}} )<br>
+                                庫存： <span style="width: 31px; display: inline-block;">{{item.quantity_percent}}%</span>
+                                ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}} )
                             </div>
                             <div class="progress progress-mini">
                                 <div :style="'width:' + item.quantity_percent + '%'"
@@ -150,7 +154,8 @@
                 "url": "{{ uri_action_link('edit', item=item) }}",
                 "modified": "{{ print_value(item.modified) }}",
                 "quantity": {{ item.quantity }},
-                "quantity_in_order": {{ item.quantity_in_order }},
+                "estimate": {{ item.estimate }},
+                "pre_order_quantity": {{ item.pre_order_quantity }},
                 "quantity_percent": {{ item.quantity_percent }},
                 "last_in_quantity": {% if item.last_in_quantity < item.low_stock_quantity %}{{ item.low_stock_quantity }}{% else %}{{ item.last_in_quantity }}{% endif %},
                 "low_level_text": {% if item.last_in_quantity < item.low_stock_quantity %}"庫存警戒 "{% else %}""{% endif %}
@@ -224,7 +229,8 @@
                 item.modified = methods.convertUITimeTOLocalTime(item.modified.isoformat);
                 if (is_find >= 0){
                     page['app'].spec_p[is_find].quantity = item.quantity;
-                    page['app'].spec_p[is_find].quantity_in_order = item.quantity_in_order;
+                    page['app'].spec_p[is_find].estimate = item.estimate;
+                    page['app'].spec_p[is_find].pre_order_quantity = item.pre_order_quantity;
                     page['app'].spec_p[is_find].quantity_percent = item.quantity_percent;
                     page['app'].spec_p[is_find].last_in_quantity = item.last_in_quantity;
                     page['app'].spec_p[is_find].low_level = item.low_level;

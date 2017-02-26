@@ -3,7 +3,7 @@
     {%- set list = context[scaffolding.plural] -%}
     <div class="row" style="margin: 25px">
         {% for item in list %}
-        <div class="col-sm-4">
+        <div class="col-sm-6">
             <div class="social-feed-separated">
                 <div class="social-avatar">
                     {% set user = item.user.get() %}
