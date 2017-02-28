@@ -23,12 +23,14 @@ class StockKeepingUnitModel(BasicModel):
     def sku_full_name(self):
         sku_prev_name = u''
         if self.sku_prev_name is not u'' and self.sku_prev_name is not None:
-            sku_prev_name = '%s-' % self.sku_prev_name
+            sku_prev_name = '%s' % self.sku_prev_name
         sku_post_name = u''
         if self.name is not u'' and self.name is not None:
             sku_post_name = self.name
         if self.sku_no is not u'' and self.sku_no is not None:
             sku_post_name = self.sku_no
+        if sku_prev_name is not u'' and sku_post_name is not u'':
+            return '%s-%s' % (sku_prev_name, sku_post_name)
         return '%s%s' % (sku_prev_name, sku_post_name)
 
     spec_full_name = Fields.StringProperty(verbose_name=u'完整規格名稱')
@@ -65,6 +67,7 @@ class StockKeepingUnitModel(BasicModel):
     spec_value_5 = Fields.HiddenProperty(verbose_name=u'規格值 5')
 
     def before_put(self):
+        super(StockKeepingUnitModel, self).before_put()
         sku_prev_name = u''
         cat = self.product
         if cat is not None:
