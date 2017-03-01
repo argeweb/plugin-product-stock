@@ -148,18 +148,18 @@
 <script type="text/javascript">
     (function(page){
         var p = methods.sortByKey([{% for item in spec_records %}{
-                "__key__": "{{ print_key(item) }}",
-                "spec_full_name": "{{ item.spec_full_name }}",
-                "low_level": {% if item.is_low_stock_level %}true{% else %}false{% endif %},
-                "url": "{{ uri_action_link('edit', item=item) }}",
-                "modified": "{{ print_value(item.modified) }}",
-                "quantity": {{ item.quantity }},
-                "estimate": {{ item.estimate }},
-                "pre_order_quantity": {{ item.pre_order_quantity }},
-                "quantity_percent": {{ item.quantity_percent }},
-                "last_in_quantity": {% if item.last_in_quantity < item.low_stock_quantity %}{{ item.low_stock_quantity }}{% else %}{{ item.last_in_quantity }}{% endif %},
-                "low_level_text": {% if item.last_in_quantity < item.low_stock_quantity %}"庫存警戒 "{% else %}""{% endif %}
-            },{% endfor %}], "spec_full_name");
+            "__key__": "{{ print_key(item) }}",
+            "spec_full_name": "{{ item.spec_full_name }}",
+            "low_level": {% if item.is_low_stock_level %}true{% else %}false{% endif %},
+            "url": "{{ uri_action_link('edit', item=item) }}",
+            "modified": "{{ print_value(item.modified) }}",
+            "quantity": {{ item.quantity }},
+            "estimate": {{ item.estimate }},
+            "pre_order_quantity": {{ item.pre_order_quantity }},
+            "quantity_percent": {{ item.quantity_percent }},
+            "last_in_quantity": {% if item.last_in_quantity < item.low_stock_quantity %}{{ item.low_stock_quantity }}{% else %}{{ item.last_in_quantity }}{% endif %},
+            "low_level_text": {% if item.last_in_quantity < item.low_stock_quantity %}"庫存警戒 "{% else %}""{% endif %}
+        },{% endfor %}], "spec_full_name");
         page['app'] = new Vue({
             el: '#app',
             data: {
@@ -172,14 +172,14 @@
         $("#btn-in-warehouse").click(function(){
             saveForm("#in-warehouse", function(data, message){
                 show_message(message, 4000);
-                page["replace_spec_data"](data.data);
+                page["replace_spec_data"](data.items);
                 page["load_sku"]();
             });
         });
         $("#btn-out-warehouse").click(function(){
             saveForm("#out-warehouse", function(data, message){
                 show_message(message, 4000);
-                page["replace_spec_data"](data.data);
+                page["replace_spec_data"](data.items);
                 page["load_sku"]();
             });
         });
@@ -248,7 +248,7 @@
             if (warehouse === "undefined" || typeof warehouse === "undefined") return;
             json_async("{{ uri_action_link('get_warehouse_detail') }}",
                     "product={{ print_key(product) }}&warehouse=" + warehouse, function(result){
-                page["replace_spec_data"](result);
+                page["replace_spec_data"](result.items);
             });
         };
         page["load_sku"] = function(){

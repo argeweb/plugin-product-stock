@@ -132,7 +132,7 @@ class Stock(Controller):
                     data.append(SKUIW_Model.in_warehouse(r, w, quantity))
                     r.put()
         self.context['message'] = u'完成'
-        self.context['data'] = data
+        self.context['data'] = {'items': data}
 
     @route
     def admin_stock_out(self):
@@ -164,7 +164,7 @@ class Stock(Controller):
         if len(msg) > 0:
             create_history(self.application_user, u'產品出庫', remake, False, u'<br>\n'.join(msg))
             self.context['message'] = u'<br>\n'.join(msg)
-            self.context['data'] = data
+            self.context['data'] = {'items': data}
             return
         data = []
         history = create_history(self.application_user, u'產品出庫', remake)
@@ -180,7 +180,8 @@ class Stock(Controller):
             sku.put()
             data.append(sku_in_warehouse)
         self.context['message'] = u'完成'
-        self.context['data'] = data
+        self.context['data'] = {'items': data}
+
 
     @route
     def admin_list_for_side_panel(self, target=''):
@@ -265,7 +266,7 @@ class Stock(Controller):
         data = SKUIW_Model.get_all_with_product(product, warehouse).fetch()
         if len(data) <= 0:
             data = SKUIW_Model.create_sku_by_product(product, warehouse)
-        self.context['data'] = data
+        self.context['data'] = {'items': data}
 
     @route
     def admin_insert_spec_to_product_records(self, target=''):
