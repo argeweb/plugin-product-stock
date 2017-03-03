@@ -1,5 +1,7 @@
 {% extends "backend/form.html" %}
+{% block layout_header %}{% endblock %}
 {% block layout_content %}
+<div class="wrapper wrapper-content">
     {%- set list = context[scaffolding.plural] -%}
     <div class="row" style="margin: 25px">
         {% for item in list %}
@@ -31,7 +33,7 @@
                             </a>
 
                             <div class="media-body">
-                                <small class="pull-right">{{ detail.sku_full_name }}</small>
+                                <small class="text-muted pull-right">{{ detail.sku_full_name }}</small>
                                 <a href="#">{{ detail.product_name }}</a> {{ detail.spec_full_name }}<br>
                                 {% if detail.operation_type == '入庫' %}入庫 <a href="#" class="small">{{ detail.quantity }}</a> 個至 {{ detail.warehouse }}{% endif %}
                                 {% if detail.operation_type == '出庫' %}從 {{ detail.warehouse }} 出庫 <a href="#" class="small">{{ detail.quantity }}</a> 個{% endif %}
@@ -47,6 +49,10 @@
         </div>
         {% endfor %}
     </div>
+    {% block partial_records_footer %}
+        {{ s.next_page_link() }}
+        {{ s.partial_include('partial_records_footer.html') }}{% endblock %}
+</div>
 {% endblock %}
 
 {% block form_actions %}{% endblock %}

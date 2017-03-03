@@ -137,6 +137,7 @@ class Stock(Controller):
     @route
     def admin_stock_out(self):
         from ..models.stock_history_model import create_history
+        from ..models.stock_history_detail_model import create_history_detail
         self.meta.change_view('json')
         length = self.params.get_integer('length')
         remake = self.params.get_string('remake')
@@ -178,10 +179,10 @@ class Stock(Controller):
             sku.last_out_quantity = sku.quantity
             sku.last_out_datetime = datetime.now()
             sku.put()
+            create_history_detail(history, sku, u'出庫', quantity, w)
             data.append(sku_in_warehouse)
         self.context['message'] = u'完成'
         self.context['data'] = {'items': data}
-
 
     @route
     def admin_list_for_side_panel(self, target=''):
@@ -207,14 +208,14 @@ class Stock(Controller):
             self.context['update_url'] = self.request.path + "?update=True"
 
         self.context['has_record'] = True
+
         def query_factory(controller):
             model = controller.meta.Model
             return model.query(model.product == product_record.key).order(model.sort)
-
         self.scaffold.query_factory = query_factory
         scaffold.list(self)
-        spec_records = self.context[self.scaffold.singular].fetch()
 
+        spec_records = self.context[self.scaffold.singular].fetch()
         need_to_insert_spec_items = get_need_update_spec_item_list(spec_lists, spec_records)
 
         if do_update:
