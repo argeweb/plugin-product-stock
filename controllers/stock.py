@@ -92,7 +92,7 @@ class Stock(Controller):
     class Meta:
         Model = StockKeepingUnitModel
         components = (scaffold.Scaffolding, Pagination, Search)
-        pagination_limit = 10
+        pagination_limit = 50
 
     class Scaffold:
         display_in_list = ('sku_full_name', 'product', 'title', 'quantity', 'is_enable', 'can_be_purchased')
