@@ -11,7 +11,7 @@ from argeweb import Fields
 
 
 class WarehouseModel(BasicModel):
-    name = Fields.HiddenProperty(verbose_name=u'系統編號')
+    name = Fields.HiddenProperty(verbose_name=u'識別名稱')
     title = Fields.StringProperty(verbose_name=u'倉庫名稱')
     address = Fields.StringProperty(verbose_name=u'地址')
     telephone = Fields.StringProperty(verbose_name=u'電話')

@@ -15,7 +15,6 @@ from ..models.warehouse_model import WarehouseModel
 class StockHistory(Controller):
     class Meta:
         components = (scaffold.Scaffolding, Pagination, Search)
-        pagination_limit = 50
 
     class Scaffold:
         # display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')

@@ -19,20 +19,6 @@ class StockKeepingUnitModel(BasicModel):
             'sku_full_name': u'sku 編號'
         }
 
-    @property
-    def sku_full_name(self):
-        sku_prev_name = u''
-        if self.sku_prev_name is not u'' and self.sku_prev_name is not None:
-            sku_prev_name = '%s' % self.sku_prev_name
-        sku_post_name = u''
-        if self.name is not u'' and self.name is not None:
-            sku_post_name = self.name
-        if self.sku_no is not u'' and self.sku_no is not None:
-            sku_post_name = self.sku_no
-        if sku_prev_name is not u'' and sku_post_name is not u'':
-            return '%s-%s' % (sku_prev_name, sku_post_name)
-        return '%s%s' % (sku_prev_name, sku_post_name)
-
     spec_full_name = Fields.StringProperty(verbose_name=u'完整規格名稱')
     image = Fields.ImageProperty(verbose_name=u'圖片')
     use_price = Fields.BooleanProperty(verbose_name=u'使用 sku 銷售價格', default=False)
@@ -46,7 +32,7 @@ class StockKeepingUnitModel(BasicModel):
     last_out_quantity = Fields.IntegerProperty(verbose_name=u'最後出庫數量', default=0)
     last_out_datetime = Fields.DateTimeProperty(verbose_name=u'最後入庫時間', auto_now_add=True)
 
-    name = Fields.StringProperty(verbose_name=u'系統編號')
+    name = Fields.StringProperty(verbose_name=u'識別名稱')
     sku_no = Fields.StringProperty(verbose_name=u'sku 編號')
     sku_prev_name = Fields.HiddenProperty(verbose_name=u'sku 前置編號')
     is_enable = Fields.BooleanProperty(verbose_name=u'顯示於前台', default=True)
@@ -65,6 +51,20 @@ class StockKeepingUnitModel(BasicModel):
     spec_value_3 = Fields.HiddenProperty(verbose_name=u'規格值 3')
     spec_value_4 = Fields.HiddenProperty(verbose_name=u'規格值 4')
     spec_value_5 = Fields.HiddenProperty(verbose_name=u'規格值 5')
+
+    @property
+    def sku_full_name(self):
+        sku_prev_name = u''
+        if self.sku_prev_name is not u'' and self.sku_prev_name is not None:
+            sku_prev_name = '%s' % self.sku_prev_name
+        sku_post_name = u''
+        if self.name is not u'' and self.name is not None:
+            sku_post_name = self.name
+        if self.sku_no is not u'' and self.sku_no is not None:
+            sku_post_name = self.sku_no
+        if sku_prev_name is not u'' and sku_post_name is not u'':
+            return '%s-%s' % (sku_prev_name, sku_post_name)
+        return '%s%s' % (sku_prev_name, sku_post_name)
 
     def before_put(self):
         super(StockKeepingUnitModel, self).before_put()
