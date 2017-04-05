@@ -233,30 +233,33 @@ class Stock(Controller):
         self.context['spec_records'] = spec_records
 
     @route
-    def get_sku_detail(self):
-        self.meta.change_view('json')
-        product = self.params.get_ndb_record('product')
-        if product is None or product.is_enable is False:
-            return self.json([])
-
-        model = self.meta.Model
-        query = model.query(model.product == product.key).order(model.sort)
-        return self.json(query.fetch())
-
-    @route
     def admin_get_sku_detail(self):
-        self.meta.change_view('json')
-        product = self.params.get_ndb_record('product')
-
         def query_factory(controller):
+            product = controller.params.get_ndb_record('product')
             model = controller.meta.Model
             return model.query(model.product == product.key).order(model.sort)
 
         self.scaffold.query_factory = query_factory
-        return scaffold.list(self)
+        return scaffold.list(self, True)
+
+    @route
+    def admin_get_sku_detail_with_order(self):
+        def query_factory(controller):
+            from plugins.order.models.order_item_model import OrderItemModel
+            warehouse = controller.params.get_ndb_record('warehouse')
+            order = controller.params.get_ndb_record('order')
+            order_items = OrderItemModel.all_with_order(order)
+            data = []
+            for item in order_items:
+                data.append(item.sku.get())
+            return data
+
+        self.scaffold.query_factory = query_factory
+        return scaffold.list(self, True)
 
     @route
     def admin_get_warehouse_detail(self):
+        # TODO 改用 scaffold
         self.meta.change_view('json')
         product = self.params.get_ndb_record('product')
         warehouse = self.params.get_ndb_record('warehouse')
@@ -266,6 +269,24 @@ class Stock(Controller):
         data = SKUIW_Model.get_all_with_product(product, warehouse).fetch()
         if len(data) <= 0:
             data = SKUIW_Model.create_sku_by_product(product, warehouse)
+        self.context['data'] = {'items': data}
+
+    @route
+    def admin_get_warehouse_detail_with_order(self):
+        # TODO 改用 scaffold
+        self.meta.change_view('json')
+        from plugins.order.models.order_item_model import OrderItemModel
+        warehouse = self.params.get_ndb_record('warehouse')
+        order = self.params.get_ndb_record('order')
+        order_items = OrderItemModel.all_with_order(order)
+        data = []
+        for item in order_items:
+            sku = item.sku.get()
+            data.append(SKUIW_Model.get_or_create(sku=sku, warehouse=warehouse))
+
+        if order is None or warehouse is None:
+            self.context['data'] = None
+            return
         self.context['data'] = {'items': data}
 
     @route
