@@ -40,7 +40,8 @@ class StockKeepingUnitModel(BasicModel):
 
     use_automatic_increment = Fields.BooleanProperty(verbose_name=u'自動增量', default=False)
     automatic_increment_quantity = Fields.IntegerProperty(verbose_name=u'增量的數量', default=0)
-    product = Fields.KeyProperty(verbose_name=u'所屬產品', kind=ProductModel)
+    product = Fields.SearchingHelperProperty(verbose_name=u'所屬產品', target='product_object', target_field_name='title')
+    product_object = Fields.KeyProperty(verbose_name=u'所屬產品', kind=ProductModel)
     spec_name_1 = Fields.HiddenProperty(verbose_name=u'規格名稱 1')
     spec_name_2 = Fields.HiddenProperty(verbose_name=u'規格名稱 2')
     spec_name_3 = Fields.HiddenProperty(verbose_name=u'規格名稱 3')
@@ -113,3 +114,7 @@ class StockKeepingUnitModel(BasicModel):
             return cls.query(cls.is_enable==True).order(-cls.sort)
         else:
             return cls.query(cls.product==cat.key, cls.is_enable==True).order(-cls.sort)
+
+    @classmethod
+    def find_by_product(cls, product):
+        return cls.query(cls.product_object == product.key).order(cls.spec_full_name)

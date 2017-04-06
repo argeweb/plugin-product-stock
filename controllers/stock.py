@@ -106,6 +106,7 @@ class Stock(Controller):
         return scaffold.list(self)
 
     @route_menu(list_name=u'backend', text=u'盤點', sort=1205, group=u'產品維護')
+    @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品維護', need_hr=True)
     def admin_list(self):
         return scaffold.list(self)
 
@@ -210,7 +211,7 @@ class Stock(Controller):
 
         def query_factory(controller):
             model = controller.meta.Model
-            return model.query(model.product == product_record.key).order(model.sort)
+            return model.query(model.product_object == product_record.key).order(model.sort)
         self.scaffold.query_factory = query_factory
         scaffold.list(self)
 
@@ -222,7 +223,7 @@ class Stock(Controller):
             for update_item in need_to_insert_spec_items:
                 m = self.meta.Model()
                 m.spec_full_name = update_item
-                m.product = product_record.key
+                m.product_object = product_record.key
                 m.put()
                 spec_records.append(m)
         else:
@@ -237,7 +238,7 @@ class Stock(Controller):
         def query_factory(controller):
             product = controller.params.get_ndb_record('product')
             model = controller.meta.Model
-            return model.query(model.product == product.key).order(model.sort)
+            return model.query(model.product_object == product.key).order(model.sort)
 
         self.scaffold.query_factory = query_factory
         return scaffold.list(self, True)
