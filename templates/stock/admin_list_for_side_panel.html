@@ -171,14 +171,14 @@
         });
         $("#btn-in-warehouse").click(function(){
             saveForm("#in-warehouse", function(data, message){
-                show_message(message, 4000);
+                alert(message, 4000);
                 page["replace_spec_data"](data.items);
                 page["load_sku"]();
             });
         });
         $("#btn-out-warehouse").click(function(){
             saveForm("#out-warehouse", function(data, message){
-                show_message(message, 4000);
+                alert(message, 4000);
                 page["replace_spec_data"](data.items);
                 page["load_sku"]();
             });
