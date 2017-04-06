@@ -120,9 +120,9 @@ class Stock(Controller):
         w = self.params.get_ndb_record('warehouse')
         history = create_history(self.application_user, u'產品入庫', remake)
         for index in xrange(0, length):
-            r = self.params.get_ndb_record('sku-key-%s' % str(index))
+            r = self.params.get_ndb_record('sku_key_%s' % str(index))
             if r is not None:
-                quantity = self.params.get_integer('sku-quantity-%s' % str(index))
+                quantity = self.params.get_integer('sku_quantity_%s' % str(index))
                 if quantity != 0:
                     create_history_detail(history, r, u'入庫', quantity, w)
                     r.quantity = r.quantity + quantity
@@ -145,9 +145,9 @@ class Stock(Controller):
         msg = []
         data = []
         for index in xrange(0, length):
-            r = self.params.get_ndb_record('sku-key-%s' % str(index))
+            r = self.params.get_ndb_record('sku_key_%s' % str(index))
             if r is not None:
-                quantity = self.params.get_integer('sku-quantity-%s' % str(index))
+                quantity = self.params.get_integer('sku_quantity_%s' % str(index))
                 if quantity > 0:
                     sku_record = SKUIW_Model.get_or_create(r, w)
                     c = sku_record.quantity - quantity
