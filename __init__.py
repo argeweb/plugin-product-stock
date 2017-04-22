@@ -15,7 +15,7 @@ plugins_helper = {
         'stock': {
             'group': u'庫存管理',
             'actions': [
-                {'action': 'list', 'name': u'庫存管理'},
+                {'action': 'list', 'name': u'最小庫存單位'},
                 {'action': 'add', 'name': u'新增產品庫存'},
                 {'action': 'edit', 'name': u'編輯產品庫存'},
                 {'action': 'view', 'name': u'檢視產品庫存'},
@@ -30,6 +30,16 @@ plugins_helper = {
                 {'action': 'edit', 'name': u'編輯倉庫'},
                 {'action': 'view', 'name': u'檢視倉庫'},
                 {'action': 'delete', 'name': u'刪除倉庫'},
+            ]
+        },
+        'stock_request': {
+            'group': u'出入庫請求',
+            'actions': [
+                {'action': 'list', 'name': u'請求列表'},
+                {'action': 'add', 'name': u'新增請求'},
+                {'action': 'edit', 'name': u'編輯請求'},
+                {'action': 'view', 'name': u'檢視請求'},
+                {'action': 'delete', 'name': u'刪除請求'},
             ]
         }
     }

@@ -2,14 +2,12 @@
 {% block layout_header %}{% endblock %}
 {% block layout_content %}
     <div class="sidebar-container" style="width: auto; height: 100%;" id="app">
-        <ul class="nav nav-tabs navs-3">
-            <li class="active"><a data-toggle="tab" href="#tab-stock" aria-expanded="true">庫存</a></li>
-            <li class=""><a data-toggle="tab" href="#tab-stock-in" aria-expanded="false">入庫</a></li>
-            <li class=""><a data-toggle="tab" href="#tab-stock-out" aria-expanded="false">出庫</a></li>
+        <ul class="nav nav-tabs navs-1">
+            <li class="active"><a data-toggle="tab" href="#tab-1" aria-expanded="true">訂單出庫</a></li>
         </ul>
 
         <div class="tab-content">
-            <div id="tab-stock" class="tab-pane active">
+            <div id="tab-1" class="tab-pane active">
                 {% if no_record_data %}
                 <div class="sidebar-title">
                     <h3>您尚未儲存產品</h3>
@@ -42,100 +40,23 @@
                 </div>
                 <ul class="sidebar-list">
                     <li style="border-bottom: none;" v-for="item in spec_p">
-                        <div class="small pull-right m-t-xs moment-vue-from-now" :data-vue-from-now="item.modified"></div>
-                        <h4 :id="'spec-name-' + item.__key__">{{item.spec_full_name}}{{item.is_low_stock_level}}</h4>
-                        <div class="small text-muted m-t-xs">
-                            <a :href="item.url" class="btn brand-bg-color pull-right" style="color: #fff;">詳細</a>
-                            估量： <span style="width: 30px; display: inline-block;">{{item.estimate +  item.pre_order_quantity }}</span>
-                            ( {{item.pre_order_quantity}} + {{item.estimate}} )<br>
-                            庫存： <span style="width: 31px; display: inline-block;">{{item.quantity_percent}}%</span>
-                            ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}} )
-                        </div>
-                        <div class="progress progress-mini progress-bar-navy-light" style="margin-top: 8px;">
-                            <div :style="'width:' + item.quantity_percent + '%'"
-                                 :class="[item.low_level ? 'progress-bar-danger' : '' ,'progress-bar']"></div>
-                        </div>
+                        <a :href="item.url" target="aside_area">
+                            <div class="small pull-right m-t-xs moment-vue-from-now" :data-vue-from-now="item.modified"></div>
+                            <h4 :id="'spec-name-' + item.__key__">{{item.spec_full_name}}{{item.is_low_stock_level}}</h4>
+                            <div class="small text-muted m-t-xs">
+                                估量： <span style="width: 30px; display: inline-block;">{{item.estimate +  item.pre_order_quantity }}</span>
+                                ( {{item.pre_order_quantity}} + {{item.estimate}} )<br>
+                                庫存： <span style="width: 31px; display: inline-block;">{{item.quantity_percent}}%</span>
+                                ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}} )
+                            </div>
+                            <div class="progress progress-mini">
+                                <div :style="'width:' + item.quantity_percent + '%'"
+                                     :class="[item.low_level ? 'progress-bar-danger' : '' ,'progress-bar']"></div>
+                            </div>
+                        </a>
                     </li>
                 </ul>
                 {% endif %}
-            </div>
-            <div id="tab-stock-in" class="tab-pane">
-                <form method="POST" action="{{ uri_action_link('stock_in') }}"
-                      data-return-encoding="{{ scaffolding.form_return_encoding }}"
-                      enctype="{{ scaffolding.form_encoding }}" accept-charset="UTF-8"
-                       role="form" id="in-warehouse">
-                <div class="sidebar-title">
-                    <h4>入庫倉庫</h4>
-                    <select name="warehouse" class="form-control" id="in-warehouse-select" v-model="in_warehouse">{% for item in warehouse %}
-                        <option value="{{ print_key(item) }}">{{ item.title }}</option>
-                    {% endfor %}</select>
-                    <h4>入庫摘要</h4>
-                    <textarea name="remake" class="form-control"></textarea>
-                    <div style="height: 22px;margin: 6px 0 0 0;">
-                        {% if has_record %}<a id="btn-in-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">入庫</a>
-                        {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
-                    </div>
-                    <input type="hidden" name="op-type" value="product" />
-                    <input type="hidden" name="length" value="{{ len_records }}" />
-                </div>
-
-                <div v-for="item in spec">
-                    <div class="form-group form-group-name filed-group"
-                         style="margin-bottom: 30px;"
-                         v-if="item.warehouse.__key__ == in_warehouse">
-                        <label class="col-xs-12 control-label" :for="'spec-' + item.key">
-                             <div class="small pull-right" style="font-weight: 100;">庫存: {{item.quantity}}</div>
-                            {{item.spec_full_name}}
-                        </label>
-                        <div class="col-xs-12 ">
-                            <input type="hidden" :name="'sku_key_' + item.index" :value="item.key">
-                            <input type="number" :name="'sku_quantity_' + item.index" :id="'spec-' + item.key"
-                                   class="form-control field-control field-type-string-field" min="0"
-                                   value="0">
-                        </div>
-                    </div>
-                </div>
-                <br style="clear: both;">
-                </form>
-            </div>
-            <div id="tab-stock-out" class="tab-pane">
-                <form method="POST" action="{{ uri_action_link('stock_out') }}"
-                      data-return-encoding="{{ scaffolding.form_return_encoding }}"
-                      enctype="{{ scaffolding.form_encoding }}" accept-charset="UTF-8"
-                      role="form" id="out-warehouse">
-                <div class="sidebar-title">
-                    <h4>出庫倉庫</h4>
-                    <select name="warehouse" class="form-control" id="out-warehouse-select" v-model="out_warehouse">{% for item in warehouse %}
-                        <option value="{{ print_key(item) }}">{{ item.title }}</option>
-                    {% endfor %}</select>
-                    <h4>出庫摘要</h4>
-                    <textarea name="remake" class="form-control"></textarea>
-                    <div style="height: 22px;margin: 6px 0 0 0;">
-                        {% if has_record %}<a id="btn-out-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
-                        {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
-                    </div>
-                    <input type="hidden" name="op-type" value="product" />
-                    <input type="hidden" name="length" value="{{ len_records }}" />
-                </div>
-
-                <div v-for="item in spec">
-                    <div class="form-group form-group-name filed-group"
-                         style="margin-bottom: 30px;"
-                         v-if="item.warehouse.__key__ == out_warehouse && item.quantity > 0">
-                        <label class="col-xs-12 control-label" :for="'spec-' + item.key">
-                             <div class="small pull-right" style="font-weight: 100;">庫存: {{item.quantity}}</div>
-                            {{item.spec_full_name}}
-                        </label>
-                        <div class="col-xs-12 ">
-                            <input type="hidden" :name="'sku_key_' + item.index" :value="item.key">
-                            <input type="number" :name="'sku_quantity_' + item.index" :id="'spec-' + item.key"
-                                   class="form-control field-control field-type-string-field" min="0"
-                                    :max="item.quantity" value="0">
-                        </div>
-                    </div>
-                </div>
-                <br style="clear: both;">
-                </form>
             </div>
         </div>
     </div>
@@ -167,17 +88,17 @@
             }
         });
         $("#btn-in-warehouse").click(function(){
-            saveForm("#in-warehouse", function(data){
+            saveForm("#in-warehouse", function(data, message){
+                alert(message, 4000);
                 page["replace_spec_data"](data.items);
                 page["load_sku"]();
-                alert(message.parseScaffoldMessage(data), 4000);
             });
         });
         $("#btn-out-warehouse").click(function(){
-            saveForm("#out-warehouse", function(data){
+            saveForm("#out-warehouse", function(data, message){
+                alert(message, 4000);
                 page["replace_spec_data"](data.items);
                 page["load_sku"]();
-                alert(message.parseScaffoldMessage(data), 4000);
             });
         });
 

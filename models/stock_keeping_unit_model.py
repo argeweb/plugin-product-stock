@@ -23,6 +23,8 @@ class StockKeepingUnitModel(BasicModel):
     image = Fields.ImageProperty(verbose_name=u'圖片')
     use_price = Fields.BooleanProperty(verbose_name=u'使用 sku 銷售價格', default=False)
     price = Fields.FloatProperty(verbose_name=u'sku 銷售價格', default=-1)
+    use_cost = Fields.BooleanProperty(verbose_name=u'使用 sku 成本', default=False)
+    cost = Fields.FloatProperty(verbose_name=u'成本', default=0.0)
     quantity = Fields.IntegerProperty(verbose_name=u'現存數量', default=0)
     estimate = Fields.IntegerProperty(verbose_name=u'預估數量', default=0)
     pre_order_quantity = Fields.IntegerProperty(verbose_name=u'預購數量', default=0)

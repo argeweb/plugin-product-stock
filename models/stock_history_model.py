@@ -9,6 +9,7 @@
 from argeweb import BasicModel
 from argeweb import Fields
 from plugins.application_user.models.application_user_model import ApplicationUserModel
+from plugins.order.models.order_model import OrderModel
 
 
 class StockHistoryModel(BasicModel):
@@ -21,10 +22,12 @@ class StockHistoryModel(BasicModel):
 
     user = Fields.KeyProperty(verbose_name=u'使用者', kind=ApplicationUserModel)
     user_name = Fields.StringProperty(verbose_name=u'使用者名稱')
-    status = Fields.BooleanProperty(verbose_name=u'狀態')
+    status = Fields.BooleanProperty(verbose_name=u'狀態')  # True 成功, False 失敗
     result = Fields.StringProperty(verbose_name=u'結果訊息')
     operation = Fields.StringProperty(verbose_name=u'操作類型') # 產品出入庫、訂單出貨、日常調動
     remake = Fields.StringProperty(verbose_name=u'摘要')
+    order = Fields.KeyProperty(verbose_name=u'所屬訂單', kind=OrderModel)
+    temporary_key = Fields.StringProperty(verbose_name=u'訂單暫存序號')
 
     @property
     def details(self):

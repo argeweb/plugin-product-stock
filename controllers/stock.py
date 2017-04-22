@@ -97,15 +97,6 @@ class Stock(Controller):
         display_in_list = ('sku_full_name', 'product', 'title', 'quantity', 'is_enable', 'can_be_purchased')
         disabled_in_form = ('product', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
 
-    @route_menu(list_name=u'backend', text=u'出庫', sort=1203, group=u'產品維護', need_hr=True)
-    def admin_list(self):
-        return scaffold.list(self)
-
-    @route_menu(list_name=u'backend', text=u'入庫', sort=1204, group=u'產品維護')
-    def admin_list(self):
-        return scaffold.list(self)
-
-    @route_menu(list_name=u'backend', text=u'盤點', sort=1205, group=u'產品維護')
     @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品維護', need_hr=True)
     def admin_list(self):
         return scaffold.list(self)
@@ -190,7 +181,7 @@ class Stock(Controller):
         if target == '--no-record--':
             self.context['no_record_data'] = True
             return
-        product_record = self.util.decode_key(target).get()
+        product_record = self.params.get_ndb_record(target)
         self.context['product'] = product_record
 
         total, spec_lists = get_spec_lists([process_spec(product_record.spec_1), process_spec(product_record.spec_2),
@@ -289,7 +280,3 @@ class Stock(Controller):
             self.context['data'] = None
             return
         self.context['data'] = {'items': data}
-
-    @route
-    def admin_insert_spec_to_product_records(self, target=''):
-        pass
