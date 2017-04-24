@@ -6,12 +6,4 @@
         $("#py_code").height(400);
     })(page);
 </script>
-    {{ sku_instance_list }}
-    {% for item in sku_instance_list %}
-        name:{{ item.sku.name }}
-        full:{{ item.sku.spec_full_name }}
-        quantity: {{ item.quantity }}
-        stock_in: {{ item.need_stock_in_quantity }}
-        stock_out: {{ item.need_stock_out_quantity }}
-    {% endfor %}
 {% endblock %}

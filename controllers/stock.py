@@ -40,7 +40,7 @@ def gen_spec_item(list_exist, list_need_to_append):
     """
     return_list_exist = []
     for exist_item in list_exist:
-        for loop_index in xrange(1, len(list_need_to_append)):
+        for loop_index in range(1, len(list_need_to_append)):
             new_item = exist_item + u',' + list_need_to_append[0] + u':' + list_need_to_append[loop_index]
             if new_item not in return_list_exist:
                 return_list_exist.append(new_item)
@@ -58,7 +58,7 @@ def get_spec_lists(original_specs):
     for loop_item_spec_list in original_specs:
         loop_item_len = len(loop_item_spec_list) - 1
         if total == 0 and loop_item_len > 0:
-            for loop_index in xrange(1, loop_item_len + 1):
+            for loop_index in range(1, loop_item_len + 1):
                 if loop_item_spec_list[loop_index] != u'':
                     total += 1
                     new_item = loop_item_spec_list[0] + u':' + loop_item_spec_list[loop_index]
@@ -95,88 +95,118 @@ class Stock(Controller):
 
     class Scaffold:
         display_in_list = ('sku_full_name', 'product', 'title', 'quantity', 'is_enable', 'can_be_purchased')
-        disabled_in_form = ('product', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
+        disabled_in_form = ('product_no', 'product', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
+        hidden_in_form = ('product_object')
 
     @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品維護', need_hr=True)
     def admin_list(self):
         return scaffold.list(self)
 
     @route
-    def admin_stock_in(self):
+    def admin_stock_process(self):
         from ..models.stock_history_model import create_history
-        from ..models.stock_history_detail_model import create_history_detail
         self.meta.change_view('json')
-        data = []
-        length = self.params.get_integer('length')
-        remake = self.params.get_string('remake')
-        w = self.params.get_ndb_record('warehouse')
-        history = create_history(self.application_user, u'產品入庫', remake)
-        for index in xrange(0, length):
-            r = self.params.get_ndb_record('sku_key_%s' % str(index))
-            if r is not None:
-                quantity = self.params.get_integer('sku_quantity_%s' % str(index))
-                if quantity != 0:
-                    create_history_detail(history, r, u'入庫', quantity, w)
-                    r.quantity = r.quantity + quantity
-                    r.last_in_quantity = r.quantity
-                    r.last_in_datetime = datetime.now()
-                    data.append(SKUIW_Model.in_warehouse(r, w, quantity))
-                    r.put()
-        self.context['message'] = u'完成'
-        self.context['data'] = {'items': data}
-
-    @route
-    def admin_stock_out(self):
-        from ..models.stock_history_model import create_history
-        from ..models.stock_history_detail_model import create_history_detail
-        self.meta.change_view('json')
-        length = self.params.get_integer('length')
-        remake = self.params.get_string('remake')
-        w = self.params.get_ndb_record('warehouse')
-        check_list = []
         msg = []
         data = []
-        for index in xrange(0, length):
-            r = self.params.get_ndb_record('sku_key_%s' % str(index))
-            if r is not None:
-                quantity = self.params.get_integer('sku_quantity_%s' % str(index))
-                if quantity > 0:
-                    sku_record = SKUIW_Model.get_or_create(r, w)
-                    c = sku_record.quantity - quantity
-                    if c < 0:
-                        msg.append(u'錯誤 [ %s ] 的數量不足 %s 個，缺少 %s 個' % (r.title, str(quantity), str(-c)))
+        check_list = []
+        length = self.params.get_integer('length')
+        remake = self.params.get_string('remake')
+        warehouse = self.params.get_ndb_record('warehouse')
+        auto_fill = self.params.get_boolean('auto_fill', False)
+        target_warehouse = self.params.get_ndb_record('target_warehouse')
+        for index in range(0, length):
+            sku = self.params.get_ndb_record('sku_key_%s' % index)
+            quantity = self.params.get_integer('sku_quantity_%s' % index)
+            operation_type = self.params.get_string('sku_operation_type_%s' % index)
+            if sku is not None and quantity != 0:
+                if operation_type == 'in':
                     check_list.append({
-                        'sku': r,
-                        'sku_in_warehouse': sku_record,
+                        'sku': sku,
                         'quantity': quantity,
-                        'check': c,
-                        'msg': msg
+                        'operation_type': operation_type
                     })
-                    data.append(sku_record)
+                if operation_type == 'out':
+                    try:
+                        warehouse.stock_out_check(sku, quantity, auto_fill=auto_fill)
+                        check_list.append({
+                            'sku': sku,
+                            'quantity': quantity,
+                            'operation_type': operation_type
+                        })
+                    except Exception as error:
+                        msg.append(u'%s' % error)
+                if operation_type == 'move':
+                    target_warehouse = self.params.get_ndb_record('target_warehouse')
+                    try:
+                        pass
+                    except Exception as error:
+                        msg.append(u'%s' % error)
+                    # 轉倉
+
         if len(msg) > 0:
             create_history(self.application_user, u'產品出庫', remake, False, u'<br>\n'.join(msg))
             self.context['message'] = u'<br>\n'.join(msg)
             self.context['data'] = {'items': data}
             return
-        data = []
-        history = create_history(self.application_user, u'產品出庫', remake)
+
+        history = create_history(self.application_user, u'產品入庫', remake)
         for item in check_list:
             sku = item['sku']
-            sku_in_warehouse = item['sku_in_warehouse']
             quantity = item['quantity']
-            sku_in_warehouse.quantity = sku_in_warehouse.quantity - quantity
-            sku_in_warehouse.put()
-            sku.quantity = sku.quantity - quantity
-            sku.last_out_quantity = sku.quantity
-            sku.last_out_datetime = datetime.now()
-            sku.put()
-            create_history_detail(history, sku, u'出庫', quantity, w)
-            data.append(sku_in_warehouse)
+            operation_type = item['operation_type']
+            if operation_type == 'in':
+                data.append(warehouse.stock_in(sku, quantity, history, u'入庫'))
+            if operation_type == 'out':
+                data.append(warehouse.stock_out(sku, quantity, history, u'出庫', auto_fill))
         self.context['message'] = u'完成'
         self.context['data'] = {'items': data}
 
+    def get_sku_instance_list(self, order_items, request_type):
+        sku_instance_list = []
+        _order_items = []
+        for item in order_items:
+            if request_type == 'all' \
+                    or ((item.order_type_value == 0) and (request_type == 'stock_only')) \
+                    or ((item.order_type_value == 1) and (request_type == 'pre_order_only')):
+                _order_items.append(item)
+
+        for item in _order_items:
+            sku_name = self.util.encode_key(item.sku)
+            sku_target = None
+            for sku_item in sku_instance_list:
+                if sku_item['name'] == sku_name:
+                    sku_target = sku_item
+
+            if sku_target is None:
+                sku_target = {
+                    'name': sku_name,
+                    'sku_key': self.util.encode_key(item.sku_instance),
+                    'sku_product_name': item.sku_instance.product,
+                    'sku_spec_full_name': item.sku_instance.spec_full_name,
+                    'need_stock_out_quantity': item.quantity,
+                    'need_stock_in_quantity': 0
+                }
+                sku_instance_list.append(sku_target)
+            else:
+                sku_target['need_stock_out_quantity'] += item.quantity
+        return sku_instance_list
+
     @route
-    def admin_list_for_side_panel(self, target=''):
+    def admin_side_panel_for_order(self, order_key=''):
+        order = self.params.get_ndb_record(order_key)
+        request_type = self.params.get_string('request_type')
+        self.context['sku_instance_list'] = self.get_sku_instance_list(order.items, request_type)
+        self.context['warehouse'] = WarehouseModel.all()
+        self.context['order'] = order
+        self.context['operation'] = u'全部出庫'
+        if request_type == 'stock_only':
+            self.context['operation'] = u'庫存出庫'
+        if request_type == 'pre_order_only':
+            self.context['operation'] = u'預購出庫'
+        return scaffold.list(self)
+
+    @route
+    def admin_side_panel_for_product(self, target=''):
         self.context['warehouse'] = WarehouseModel.all()
         if target == '--no-record--':
             self.context['no_record_data'] = True
@@ -262,6 +292,19 @@ class Stock(Controller):
         if len(data) <= 0:
             data = SKUIW_Model.create_sku_by_product(product, warehouse)
         self.context['data'] = {'items': data}
+
+    @route
+    def admin_get_warehouse_detail_with_sku(self):
+        self.meta.change_view('json')
+        items = self.params.get_string('sku_items').split(',')
+        warehouse = self.params.get_ndb_record('warehouse')
+        warehouse_sku_items = []
+        for item in items:
+            sku = self.params.get_ndb_record(item)
+            if sku is not None:
+                warehouse_sku = SKUIW_Model.get_or_create(sku, warehouse)
+                warehouse_sku_items.append(warehouse_sku)
+        self.context['data'] = {'items': warehouse_sku_items}
 
     @route
     def admin_get_warehouse_detail_with_order(self):

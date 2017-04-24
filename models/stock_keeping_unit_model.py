@@ -16,14 +16,17 @@ class StockKeepingUnitModel(BasicModel):
         label_name = {
             'is_enable': u'啟用',
             'title': u'完整規格名稱',
-            'sku_full_name': u'sku 編號'
+            'sku_full_name': u'sku 完整編號'
         }
 
+    name = Fields.StringProperty(verbose_name=u'識別名稱')
+    product_no = Fields.StringProperty(verbose_name=u'產品編號')
+    sku_no = Fields.StringProperty(verbose_name=u'sku 編號')
     spec_full_name = Fields.StringProperty(verbose_name=u'完整規格名稱')
     image = Fields.ImageProperty(verbose_name=u'圖片')
-    use_price = Fields.BooleanProperty(verbose_name=u'使用 sku 銷售價格', default=False)
-    price = Fields.FloatProperty(verbose_name=u'sku 銷售價格', default=-1)
-    use_cost = Fields.BooleanProperty(verbose_name=u'使用 sku 成本', default=False)
+    use_price = Fields.BooleanProperty(verbose_name=u'使用獨立銷售價格', default=False)
+    price = Fields.FloatProperty(verbose_name=u'獨立銷售價格', default=-1)
+    use_cost = Fields.BooleanProperty(verbose_name=u'使用成本', default=False)
     cost = Fields.FloatProperty(verbose_name=u'成本', default=0.0)
     quantity = Fields.IntegerProperty(verbose_name=u'現存數量', default=0)
     estimate = Fields.IntegerProperty(verbose_name=u'預估數量', default=0)
@@ -34,9 +37,6 @@ class StockKeepingUnitModel(BasicModel):
     last_out_quantity = Fields.IntegerProperty(verbose_name=u'最後出庫數量', default=0)
     last_out_datetime = Fields.DateTimeProperty(verbose_name=u'最後入庫時間', auto_now_add=True)
 
-    name = Fields.StringProperty(verbose_name=u'識別名稱')
-    sku_no = Fields.StringProperty(verbose_name=u'sku 編號')
-    sku_prev_name = Fields.HiddenProperty(verbose_name=u'sku 前置編號')
     is_enable = Fields.BooleanProperty(verbose_name=u'顯示於前台', default=True)
     can_be_purchased = Fields.BooleanProperty(verbose_name=u'可購買', default=True)
 
@@ -57,32 +57,32 @@ class StockKeepingUnitModel(BasicModel):
 
     @property
     def sku_full_name(self):
-        sku_prev_name = u''
-        if self.sku_prev_name is not u'' and self.sku_prev_name is not None:
-            sku_prev_name = '%s' % self.sku_prev_name
+        product_no = u''
+        if self.product_no is not u'' and self.product_no is not None:
+            product_no = '%s' % self.product_no
         sku_post_name = u''
         if self.name is not u'' and self.name is not None:
             sku_post_name = self.name
         if self.sku_no is not u'' and self.sku_no is not None:
             sku_post_name = self.sku_no
-        if sku_prev_name is not u'' and sku_post_name is not u'':
-            return '%s-%s' % (sku_prev_name, sku_post_name)
-        return '%s%s' % (sku_prev_name, sku_post_name)
+        if product_no is not u'' and sku_post_name is not u'':
+            return '%s-%s' % (product_no, sku_post_name)
+        return '%s%s' % (product_no, sku_post_name)
 
     def before_put(self):
         super(StockKeepingUnitModel, self).before_put()
-        sku_prev_name = u''
-        cat = self.product
+        product_no = u''
+        cat = self.product_object
         if cat is not None:
             try:
                 cat = cat.get()
-                sku_prev_name = cat.sku_prev_name
+                product_no = cat.product_no
             except:
                 pass
         spec_list = (u'%s' % self.spec_full_name).split(u',')
         i = 0
-        setattr(self, 'sku_prev_name', sku_prev_name)
-        for index in xrange(0, len(spec_list)):
+        setattr(self, 'product_no', product_no)
+        for index in range(0, len(spec_list)):
             spec = spec_list[index].split(u':')
             setattr(self, 'spec_name_%s' % (index + 1), spec[0])
             setattr(self, 'spec_value_%s' % (index + 1), spec[1])
@@ -115,7 +115,7 @@ class StockKeepingUnitModel(BasicModel):
         if cat is None:
             return cls.query(cls.is_enable==True).order(-cls.sort)
         else:
-            return cls.query(cls.product==cat.key, cls.is_enable==True).order(-cls.sort)
+            return cls.query(cls.product_object==cat.key, cls.is_enable==True).order(-cls.sort)
 
     @classmethod
     def find_by_product(cls, product):

@@ -1,0 +1,131 @@
+{% extends "backend/form.html" %}
+{% block layout_header %}{% endblock %}
+{% block layout_content %}
+    <div class="sidebar-container" style="width: auto; height: 100%;" id="app">
+        <ul class="nav nav-tabs navs-3">
+            <li class="active"><a data-toggle="tab" href="#tab-order-item" aria-expanded="true">訂購項目</a></li>
+            <li class=""><a data-toggle="tab" href="#tab-insert-item" aria-expanded="false">新增項目</a></li>
+            <li class=""><a data-toggle="tab" href="#tab-other" aria-expanded="false">相關操作</a></li>
+        </ul>
+
+        <div class="tab-content">
+            <div id="tab-order-item" class="tab-pane active">
+                <form method="POST" action="{{ uri_action_link('stock_process') }}"
+                      data-return-encoding="{{ scaffolding.form_return_encoding }}"
+                      enctype="{{ scaffolding.form_encoding }}" accept-charset="UTF-8"
+                       role="form" id="out-warehouse">
+                <div class="sidebar-title">
+                    <h4>執行的倉庫</h4>
+                    <select name="warehouse" class="form-control" id="warehouse-select" v-model="warehouse">{% for item in warehouse %}
+                        <option value="{{ print_key(item) }}">{{ item.title }}</option>
+                    {% endfor %}</select>
+                    <h4>訂單出庫摘要</h4>
+                    <textarea name="remake" class="form-control">訂單 {{ order.order_no }} 進行 {{ operation }}</textarea>
+                    <div style="height: 22px;margin: 6px 0 0 0;">
+                        <a v-if="warehouse != ''" v-on:click="outWarehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
+                        <span v-if="warehouse == ''" class="btn pull-right" style="color: #aaa;">請先選擇倉庫</span>
+                    </div>
+                    <input type="hidden" name="auto_fill" value="true" />
+                    <input type="hidden" name="length" id="items-length" value="" />
+                </div>
+
+                <div v-for="item in order_item_sku_items">
+                    <div class="form-group form-group-name filed-group"
+                         v-if="item.need_stock_in_quantity > 0"
+                         style="margin-bottom: 30px;">
+                        <label class="col-xs-12 control-label" :for="'spec-' + item.sku_key">
+                            {{item.sku_product_name}} {{item.sku_spec_full_name}}
+                            <span class="label label-primary pull-right" style="margin-top: 9px;">數量不足自動入庫</span>
+                        </label>
+                        <div class="col-xs-12 ">
+                            <input type="hidden" class="sku_key_input" :value="item.sku_key">
+                            <input type="hidden" class="sku_operation_type_input" value="in">
+                            <input type="number" class="sku_quantity_input form-control field-control field-type-string-field "
+                                   :id="'spec-' + item.sku_key" min="0" :value="item.need_stock_in_quantity">
+                        </div>
+                    </div>
+                </div>
+                <div v-for="item in order_item_sku_items">
+                    <div class="form-group form-group-name filed-group"
+                         v-if="item.need_stock_out_quantity > 0"
+                         style="margin-bottom: 30px;">
+                        <label class="col-xs-12 control-label" :for="'spec-' + item.sku_key">
+                            {{item.sku_product_name}} {{item.sku_spec_full_name}}
+                            <span class="label label-danger pull-right" style="margin-top: 9px;">出庫</span>
+                        </label>
+                        <div class="col-xs-12 sku-item-group">
+                            <input type="hidden" class="sku_key_input" :value="item.sku_key">
+                            <input type="hidden" class="sku_operation_type_input" value="out">
+                            <input type="number" class="sku_quantity_input form-control field-control field-type-string-field "
+                                   :id="'spec-' + item.sku_key" min="0" :value="item.need_stock_out_quantity">
+                        </div>
+                    </div>
+                </div>
+                <br style="clear: both;">
+                </form>
+            </div>
+            <div id="tab-insert-item" class="tab-pane">
+            </div>
+            <div id="tab-other" class="tab-pane">
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block layout_scripts %}
+<script type="text/javascript">
+    (function(page){
+        var p = methods.sortByKey([{% for item in context["sku_instance_list"] %}{
+            "sku_key": "{{ item.sku_key }}",
+            "sku_product_name": "{{ item.sku_product_name }}",
+            "sku_spec_full_name": "{{ item.sku_spec_full_name }}",
+            "need_stock_out_quantity": {{ item.need_stock_out_quantity }},
+            "need_stock_in_quantity": {{ item.need_stock_in_quantity }},
+        },{% endfor %}], "sku_product_name");
+        page['app'] = new Vue({
+            el: '#app',
+            data: {
+                order_item_sku_items: p,
+                warehouse_sku_items: [],
+                warehouse: "",
+            },
+            methods: {
+                outWarehouse: function (event) {
+                    $("#items-length").val($(".sku-item-group").length);
+                    $(".sku_key_input").each(function(){ $(this).attr("name", "sku_key_" + $(".sku_key_input").index(this)) });
+                    $(".sku_operation_type_input").each(function(){ $(this).attr("name", "sku_operation_type_" + $(".sku_operation_type_input").index(this)) });
+                    $(".sku_quantity_input").each(function(){ $(this).attr("name", "sku_quantity_" + $(".sku_quantity_input").index(this)) });
+                    saveForm("#out-warehouse", function (data) {
+                        message.alert(message.parse(data), 4000);
+                    });
+                },
+            }
+        });
+        $("#warehouse-select").change(function(){
+            page['load_warehouse_detail']($("#warehouse-select option:selected").val());
+        });
+        page["load_warehouse_detail"] = function(warehouse){
+            if (warehouse === "undefined" || typeof warehouse === "undefined") return;
+            var items = $.map(page["app"]["order_item_sku_items"], function (item) {
+                if (item.need_stock_out_quantity > 0)
+                    return item.sku_key;
+            });
+            json_async("{{ uri('admin:product_stock:stock:get_warehouse_detail_with_sku') }}",
+                    "sku_items=" + items.join() + "&warehouse=" + warehouse, function(result){
+                page["update_warehouse_sku_items"](result.items);
+            });
+        };
+        page["update_warehouse_sku_items"] = function(items){
+            $.each(page["app"]["order_item_sku_items"], function(index, item){
+                for (let i=0;i<items.length;i++){
+                    if (items[0].sku.__key__ == item.sku_key){
+                        let c = items[0].quantity - item.need_stock_out_quantity;
+                        if (c < 0) item.need_stock_in_quantity = -c;
+                    }
+                }
+            });
+            page["app"]["warehouse_sku_items"] = items;
+        };
+    })(page);
+</script>
+{% endblock %}

@@ -10,6 +10,7 @@ from datetime import datetime
 from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
+from ..models.warehouse_model import WarehouseModel
 
 
 class StockTemporaryItem(Controller):

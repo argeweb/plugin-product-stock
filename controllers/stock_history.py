@@ -9,7 +9,6 @@ from datetime import datetime
 from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
 from argeweb.components.pagination import Pagination
 from argeweb.components.search import Search
-from ..models.warehouse_model import WarehouseModel
 
 
 class StockHistory(Controller):
@@ -39,37 +38,16 @@ class StockHistory(Controller):
 
         order = self.params.get_ndb_record(order_key)
         temporary_key = self.util.encode_key(order) + '-' + str(time.time())
-        sku_list = []
-        sku_instance_list = []
         for item in OrderItemModel.all_with_order(order):
-            n = None
             if request_type == 'all' \
                     or ((item.order_type_value == 0) and (request_type == 'stock_only')) \
                     or ((item.order_type_value == 1) and (request_type == 'pre_order_only')):
-                n = StockTemporaryItemModel.create_from_order_item(item, temporary_key)
+                StockTemporaryItemModel.create_from_order_item(item, temporary_key)
 
-            if n is not None:
-                sku_name = self.util.encode_key(n.sku)
-                sku_target = None
-                for sku_item in sku_instance_list:
-                    if sku_item['name'] == sku_name:
-                        sku_target = sku_item
+        def scaffold_after_save(**kwargs):
+            item = kwargs['item']
 
-                if sku_target is None:
-                    sku_target = {
-                        'name': sku_name,
-                        'sku': n.sku_instance,
-                        'need_stock_out_quantity': item.quantity,
-                        'need_stock_in_quantity': 0
-                    }
-                    sku_instance_list.append(sku_target)
-                else:
-                    sku_target['need_stock_out_quantity'] += item.quantity
-                sku_quantity = sku_target['sku'].quantity
-                if sku_target['need_stock_out_quantity'] >= sku_quantity:
-                    sku_target['need_stock_in_quantity'] = sku_target['need_stock_out_quantity'] - sku_quantity
-
-        self.context['sku_instance_list'] = sku_instance_list
+        self.events.scaffold_after_save += scaffold_after_save
         self.context['temporary_key'] = temporary_key
         return scaffold.add(self, user=self.application_user.key, user_name=self.application_user.name,
-                            temporary_key=temporary_key, operation=operation, order=order.key)
+                            temporary_key=temporary_key, operation=operation, order=order.key, temporary_items=temporary_key)

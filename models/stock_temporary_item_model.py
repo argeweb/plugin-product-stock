@@ -76,6 +76,32 @@ class StockTemporaryItemModel(BasicModel):
         return cls.query(cls.user==key).order(-cls.sort)
 
     @classmethod
+    def all_with_target(cls, target):
+        from argeweb.core.ndb import encode_key
+        sku_instance_list = []
+        for item in cls.query(cls.temporary==target).order(-cls.sort):
+            sku_name = encode_key(item.sku)
+            sku_target = None
+            for sku_item in sku_instance_list:
+                if sku_item['name'] == sku_name:
+                    sku_target = sku_item
+
+            if sku_target is None:
+                sku_target = {
+                    'name': sku_name,
+                    'sku': item.sku_instance,
+                    'need_stock_out_quantity': item.quantity,
+                    'need_stock_in_quantity': 0
+                }
+                sku_instance_list.append(sku_target)
+            else:
+                sku_target['need_stock_out_quantity'] += item.quantity
+            sku_quantity = sku_target['sku'].quantity
+            if sku_target['need_stock_out_quantity'] >= sku_quantity:
+                sku_target['need_stock_in_quantity'] = sku_target['need_stock_out_quantity'] - sku_quantity
+        return sku_instance_list
+
+    @classmethod
     def before_delete(cls, key):
         item = key.get()
         if item.order_type_value == 0:

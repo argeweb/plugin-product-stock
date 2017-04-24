@@ -60,7 +60,7 @@
                 {% endif %}
             </div>
             <div id="tab-stock-in" class="tab-pane">
-                <form method="POST" action="{{ uri_action_link('stock_in') }}"
+                <form method="POST" action="{{ uri_action_link('stock_process') }}"
                       data-return-encoding="{{ scaffolding.form_return_encoding }}"
                       enctype="{{ scaffolding.form_encoding }}" accept-charset="UTF-8"
                        role="form" id="in-warehouse">
@@ -75,7 +75,6 @@
                         {% if has_record %}<a id="btn-in-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">入庫</a>
                         {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
                     </div>
-                    <input type="hidden" name="op-type" value="product" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
                 </div>
 
@@ -89,6 +88,7 @@
                         </label>
                         <div class="col-xs-12 ">
                             <input type="hidden" :name="'sku_key_' + item.index" :value="item.key">
+                            <input type="hidden" :name="'sku_operation_type_' + item.index" value="in">
                             <input type="number" :name="'sku_quantity_' + item.index" :id="'spec-' + item.key"
                                    class="form-control field-control field-type-string-field" min="0"
                                    value="0">
@@ -99,7 +99,7 @@
                 </form>
             </div>
             <div id="tab-stock-out" class="tab-pane">
-                <form method="POST" action="{{ uri_action_link('stock_out') }}"
+                <form method="POST" action="{{ uri_action_link('stock_process') }}"
                       data-return-encoding="{{ scaffolding.form_return_encoding }}"
                       enctype="{{ scaffolding.form_encoding }}" accept-charset="UTF-8"
                       role="form" id="out-warehouse">
@@ -114,7 +114,6 @@
                         {% if has_record %}<a id="btn-out-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
                         {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
                     </div>
-                    <input type="hidden" name="op-type" value="product" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
                 </div>
 
@@ -128,6 +127,7 @@
                         </label>
                         <div class="col-xs-12 ">
                             <input type="hidden" :name="'sku_key_' + item.index" :value="item.key">
+                            <input type="hidden" :name="'sku_operation_type_' + item.index" value="out">
                             <input type="number" :name="'sku_quantity_' + item.index" :id="'spec-' + item.key"
                                    class="form-control field-control field-type-string-field" min="0"
                                     :max="item.quantity" value="0">
@@ -170,14 +170,14 @@
             saveForm("#in-warehouse", function(data){
                 page["replace_spec_data"](data.items);
                 page["load_sku"]();
-                alert(message.parseScaffoldMessage(data), 4000);
+                message.alert(message.parse(data), 4000);
             });
         });
         $("#btn-out-warehouse").click(function(){
             saveForm("#out-warehouse", function(data){
                 page["replace_spec_data"](data.items);
                 page["load_sku"]();
-                alert(message.parseScaffoldMessage(data), 4000);
+                message.alert(message.parse(data), 4000);
             });
         });
 

@@ -13,13 +13,6 @@ from plugins.order.models.order_model import OrderModel
 
 
 class StockHistoryModel(BasicModel):
-    class Meta:
-        label_name = {
-            'is_enable': u'啟用',
-            'title': u'完整規格名稱',
-            'sku_full_name': u'sku 編號'
-        }
-
     user = Fields.KeyProperty(verbose_name=u'使用者', kind=ApplicationUserModel)
     user_name = Fields.StringProperty(verbose_name=u'使用者名稱')
     status = Fields.BooleanProperty(verbose_name=u'狀態')  # True 成功, False 失敗
@@ -28,6 +21,8 @@ class StockHistoryModel(BasicModel):
     remake = Fields.StringProperty(verbose_name=u'摘要')
     order = Fields.KeyProperty(verbose_name=u'所屬訂單', kind=OrderModel)
     temporary_key = Fields.StringProperty(verbose_name=u'訂單暫存序號')
+    temporary_items = Fields.SidePanelProperty(verbose_name=u'相關項目', text=u'點擊此處查看 相關項目', auto_open=True,
+                                        uri='admin:product_stock:stock:side_panel_for_order')
 
     @property
     def details(self):
