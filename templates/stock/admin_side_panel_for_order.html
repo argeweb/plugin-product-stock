@@ -25,6 +25,8 @@
                         <a v-if="warehouse != ''" v-on:click="outWarehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
                         <span v-if="warehouse == ''" class="btn pull-right" style="color: #aaa;">請先選擇倉庫</span>
                     </div>
+                    <input type="hidden" name="operation" value="訂單{{ operation }}" />
+                    <input type="hidden" name="order_key" value="{{ print_key(order) }}" />
                     <input type="hidden" name="auto_fill" value="true" />
                     <input type="hidden" name="length" id="items-length" value="" />
                 </div>
@@ -37,7 +39,7 @@
                             {{item.sku_product_name}} {{item.sku_spec_full_name}}
                             <span class="label label-primary pull-right" style="margin-top: 9px;">數量不足自動入庫</span>
                         </label>
-                        <div class="col-xs-12 ">
+                        <div class="col-xs-12 sku-item-group">
                             <input type="hidden" class="sku_key_input" :value="item.sku_key">
                             <input type="hidden" class="sku_operation_type_input" value="in">
                             <input type="number" class="sku_quantity_input form-control field-control field-type-string-field "

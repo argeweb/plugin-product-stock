@@ -6,6 +6,7 @@
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
 from google.appengine.ext import ndb
+from google.appengine.api import taskqueue
 from datetime import datetime
 from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
 from argeweb.components.pagination import Pagination
@@ -98,6 +99,16 @@ class Stock(Controller):
         disabled_in_form = ('product_no', 'product', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
         hidden_in_form = ('product_object')
 
+    @route
+    def reset_order_quantity(self):
+        order = self.params.get_ndb_record('order')
+        history = self.params.get_ndb_record('history')
+        n = history.details
+        for item in order.items:
+            pass
+        self.logging.info(order)
+        return 'task'
+
     @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品維護', need_hr=True)
     def admin_list(self):
         return scaffold.list(self)
@@ -112,8 +123,10 @@ class Stock(Controller):
         length = self.params.get_integer('length')
         remake = self.params.get_string('remake')
         warehouse = self.params.get_ndb_record('warehouse')
+        operation = self.params.get_string('operation', '庫存管理')
         auto_fill = self.params.get_boolean('auto_fill', False)
         target_warehouse = self.params.get_ndb_record('target_warehouse')
+
         for index in range(0, length):
             sku = self.params.get_ndb_record('sku_key_%s' % index)
             quantity = self.params.get_integer('sku_quantity_%s' % index)
@@ -144,12 +157,20 @@ class Stock(Controller):
                     # 轉倉
 
         if len(msg) > 0:
-            create_history(self.application_user, u'產品出庫', remake, False, u'<br>\n'.join(msg))
+            create_history(self.application_user, operation, remake, False, u'<br>\n'.join(msg))
             self.context['message'] = u'<br>\n'.join(msg)
             self.context['data'] = {'items': data}
-            return
+            returnstock.py
 
-        history = create_history(self.application_user, u'產品入庫', remake)
+        order = self.params.get_ndb_record('order_key')
+        history = create_history(self.application_user, operation, remake, order=order)
+        if order is not None:
+            order.need_reset_stock_quantity = True
+            order.put()
+            task = taskqueue.add(
+                url='/product_stock/stock/reset_order_quantity',
+                params={'order': self.util.encode_key(order), 'history': self.util.encode_key(history)})
+
         for item in check_list:
             sku = item['sku']
             quantity = item['quantity']

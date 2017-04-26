@@ -75,6 +75,7 @@
                         {% if has_record %}<a id="btn-in-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">入庫</a>
                         {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
                     </div>
+                    <input type="hidden" name="operation" value="產品入庫" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
                 </div>
 
@@ -114,6 +115,7 @@
                         {% if has_record %}<a id="btn-out-warehouse" class="btn brand-bg-color pull-right" style="color: #fff;">出庫</a>
                         {% else %}<span class="btn pull-right" style="color: #aaa;">目前無法使用</span>{% endif %}
                     </div>
+                    <input type="hidden" name="operation" value="產品出庫" />
                     <input type="hidden" name="length" value="{{ len_records }}" />
                 </div>
 

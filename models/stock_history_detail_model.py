@@ -28,6 +28,10 @@ class StockHistoryDetailModel(BasicModel):
     warehouse_target = Fields.StringProperty(verbose_name=u'目標倉庫')
     quantity = Fields.IntegerProperty(verbose_name=u'數量')
 
+    @classmethod
+    def all_with_history(cls, history):
+        return cls.query(cls.history == history.key).order(-cls.sort)
+
 
 def create_history_detail(history, sku, operation_type, quantity, warehouse, warehouse_target=None):
     product = sku.product_object.get()
