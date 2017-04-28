@@ -100,13 +100,39 @@ class Stock(Controller):
         hidden_in_form = ('product_object')
 
     @route
-    def reset_order_quantity(self):
+    def taskqueue_reset_order_quantity(self):
         order = self.params.get_ndb_record('order')
         history = self.params.get_ndb_record('history')
-        n = history.details
+        history_sku_list = []
+        order_item_sku_list = []
+        for detail in history.details:
+            history_sku_list.append({
+                'history_detail': detail,
+                'sku': detail.sku_instance
+            })
         for item in order.items:
-            pass
-        self.logging.info(order)
+            order_item_sku_list.append({
+                'order_item': item,
+                'sku': item.sku_instance
+            })
+        for o in order_item_sku_list:
+            o_item = o['order_item']
+            o_sku = o['sku']
+            for h in history_sku_list:
+                h_item = h['history_detail']
+                h_sku = h['sku']
+                if h_sku == o_sku:
+                    if o_item.quantity_has_count > 0 and h_item.quantity > 0:
+                        if o_item.order_type_value == 0:
+                            o_sku.change_in_order_quantity(o_item.quantity_has_count)
+                        if o_item.order_type_value == 1:
+                            o_sku.change_pre_order_quantity(h_item.quantity)
+                        o_sku.put()
+                        o_item.quantity_has_count = o_item.quantity_has_count - h_item.quantity
+                        if o_item.quantity_has_count < 0:
+                            o_item.quantity_has_count = 0
+                        o_item.put()
+                        continue
         return 'task'
 
     @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品維護', need_hr=True)
@@ -160,7 +186,7 @@ class Stock(Controller):
             create_history(self.application_user, operation, remake, False, u'<br>\n'.join(msg))
             self.context['message'] = u'<br>\n'.join(msg)
             self.context['data'] = {'items': data}
-            returnstock.py
+            return
 
         order = self.params.get_ndb_record('order_key')
         history = create_history(self.application_user, operation, remake, order=order)
@@ -168,7 +194,7 @@ class Stock(Controller):
             order.need_reset_stock_quantity = True
             order.put()
             task = taskqueue.add(
-                url='/product_stock/stock/reset_order_quantity',
+                url=self.uri('taskqueue:product_stock:stock:reset_order_quantity'),
                 params={'order': self.util.encode_key(order), 'history': self.util.encode_key(history)})
 
         for item in check_list:

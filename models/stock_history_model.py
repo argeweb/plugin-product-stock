@@ -36,7 +36,8 @@ def create_history(user, operation, remake=u'', status=True, result=u'完成', o
     r.user_name = user.name
     r.status = status
     r.operation = operation
-    r.order = order.key
+    if order is not None:
+        r.order = order.key
     r.result = result
     r.remake = remake
     r.put()

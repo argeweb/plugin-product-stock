@@ -21,8 +21,9 @@ class StockHistoryDetailModel(BasicModel):
     history = Fields.KeyProperty(verbose_name=u'歷史記錄', kind=StockHistoryModel)
     product_name = Fields.StringProperty(verbose_name=u'產品名稱')
     product_image = Fields.StringProperty(verbose_name=u'產品圖片')
-    spec_full_name = Fields.StringProperty(verbose_name=u'完整規格名稱')
-    sku_full_name = Fields.StringProperty(verbose_name=u'sku 編號')
+    sku_object = Fields.KeyProperty(verbose_name=u'SKU 對象')
+    spec_full_name = Fields.SearchingHelperProperty(verbose_name=u'完整規格名稱', target='sku_object', target_field_name='spec_full_name')
+    sku_full_name = Fields.SearchingHelperProperty(verbose_name=u'sku 編號', target='sku_object', target_field_name='sku_full_name')
     operation_type = Fields.StringProperty(verbose_name=u'操作類型')  # 出庫、入庫、轉倉
     warehouse = Fields.StringProperty(verbose_name=u'倉庫')
     warehouse_target = Fields.StringProperty(verbose_name=u'目標倉庫')
@@ -32,6 +33,11 @@ class StockHistoryDetailModel(BasicModel):
     def all_with_history(cls, history):
         return cls.query(cls.history == history.key).order(-cls.sort)
 
+    @property
+    def sku_instance(self):
+        if not hasattr(self, '_sku'):
+            self._sku = self.sku_object.get()
+        return self._sku
 
 def create_history_detail(history, sku, operation_type, quantity, warehouse, warehouse_target=None):
     product = sku.product_object.get()
@@ -39,8 +45,7 @@ def create_history_detail(history, sku, operation_type, quantity, warehouse, war
     r.history = history.key
     r.product_name = product.title
     r.product_image = product.image
-    r.spec_full_name = sku.spec_full_name
-    r.sku_full_name = sku.sku_full_name
+    r.sku_object = sku.key
     r.operation_type = operation_type
     r.quantity = quantity
     r.warehouse = warehouse.title

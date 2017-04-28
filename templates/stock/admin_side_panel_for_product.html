@@ -46,8 +46,10 @@
                         <h4 :id="'spec-name-' + item.__key__">{{item.spec_full_name}}{{item.is_low_stock_level}}</h4>
                         <div class="small text-muted m-t-xs">
                             <a :href="item.url" class="btn brand-bg-color pull-right" style="color: #fff;">詳細</a>
-                            估量： <span style="width: 30px; display: inline-block;">{{item.estimate +  item.pre_order_quantity }}</span>
-                            ( {{item.pre_order_quantity}} + {{item.estimate}} )<br>
+                            庫存： <span style="width:230px; display: inline-block;">{{item.quantity}}
+                            　　預估： {{item.estimate}}
+                            　　訂單： {{item.in_order_quantity}}
+                            　　預購： {{item.pre_order_quantity}}</span><br>
                             庫存： <span style="width: 31px; display: inline-block;">{{item.quantity_percent}}%</span>
                             ( {{item.quantity}} / {{item.last_in_quantity}} {{item.low_level_text}} )
                         </div>
@@ -154,6 +156,7 @@
             "modified": "{{ print_value(item.modified) }}",
             "quantity": {{ item.quantity }},
             "estimate": {{ item.estimate }},
+            "in_order_quantity": {{ item.in_order_quantity }},
             "pre_order_quantity": {{ item.pre_order_quantity }},
             "quantity_percent": {{ item.quantity_percent }},
             "last_in_quantity": {% if item.last_in_quantity < item.low_stock_quantity %}{{ item.low_stock_quantity }}{% else %}{{ item.last_in_quantity }}{% endif %},

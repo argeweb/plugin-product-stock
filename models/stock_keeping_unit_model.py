@@ -30,7 +30,8 @@ class StockKeepingUnitModel(BasicModel):
     cost = Fields.FloatProperty(verbose_name=u'成本', default=0.0)
     quantity = Fields.IntegerProperty(verbose_name=u'現存數量', default=0)
     estimate = Fields.IntegerProperty(verbose_name=u'預估數量', default=0)
-    pre_order_quantity = Fields.IntegerProperty(verbose_name=u'預購數量', default=0)
+    in_order_quantity = Fields.IntegerProperty(verbose_name=u'在訂單中的數量', default=0)
+    pre_order_quantity = Fields.IntegerProperty(verbose_name=u'在預購中的數量', default=0)
     low_stock_quantity = Fields.IntegerProperty(verbose_name=u'庫存警戒線', default=-1)
     last_in_quantity = Fields.IntegerProperty(verbose_name=u'最後入庫數量', default=0)
     last_in_datetime = Fields.DateTimeProperty(verbose_name=u'最後入庫時間', auto_now_add=True)
@@ -120,3 +121,25 @@ class StockKeepingUnitModel(BasicModel):
     @classmethod
     def find_by_product(cls, product):
         return cls.query(cls.product_object == product.key).order(cls.spec_full_name)
+
+    def change_estimate_quantity(self, sub_quantity=0, add_quantity=0):
+        self.estimate = self.estimate - abs(sub_quantity) + abs(add_quantity)
+        if self.estimate < 0:
+            self.estimate = 0
+
+    def change_pre_order_quantity(self, sub_quantity=0, add_quantity=0):
+        self.pre_order_quantity = self.pre_order_quantity - abs(sub_quantity) + abs(add_quantity)
+        if self.pre_order_quantity < 0:
+            self.pre_order_quantity = 0
+
+    def change_in_order_quantity(self, sub_quantity=0, add_quantity=0):
+        self.in_order_quantity = self.in_order_quantity - abs(sub_quantity) + abs(add_quantity)
+        if self.in_order_quantity < 0:
+            self.in_order_quantity = 0
+
+    @property
+    def quantity_can_be_used(self):
+        n = self.quantity - self.in_order_quantity - self.estimate
+        if n < 0:
+            return 0
+        return n
