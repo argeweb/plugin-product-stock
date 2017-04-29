@@ -135,7 +135,7 @@ class Stock(Controller):
                         continue
         return 'task'
 
-    @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品維護', need_hr=True)
+    @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品銷售', need_hr=True)
     def admin_list(self):
         return scaffold.list(self)
 
@@ -370,3 +370,12 @@ class Stock(Controller):
             self.context['data'] = None
             return
         self.context['data'] = {'items': data}
+
+    @route
+    def taskqueue_update_sku_information(self):
+        self.meta.change_view('json')
+        product = self.params.get_ndb_record('product')
+        sku_items = StockKeepingUnitModel.all_enable(product=product)
+        for item in sku_items:
+            item.put()
+        self.context['data'] = {'update': sku_items}

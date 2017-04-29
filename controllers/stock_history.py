@@ -20,6 +20,6 @@ class StockHistory(Controller):
         disabled_in_form = ('user', 'user_name', 'operation')
         hidden_in_form = ('temporary_key', 'status', 'result')
 
-    @route_menu(list_name=u'backend', text=u'庫存記錄', sort=1207, group=u'產品維護')
+    @route_menu(list_name=u'backend', text=u'庫存記錄', sort=1207, group=u'產品銷售')
     def admin_list(self):
         return scaffold.list(self)
