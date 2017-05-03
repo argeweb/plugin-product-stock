@@ -20,6 +20,7 @@ plugins_helper = {
                 {'action': 'edit', 'name': u'編輯產品庫存'},
                 {'action': 'view', 'name': u'檢視產品庫存'},
                 {'action': 'delete', 'name': u'刪除產品庫存'},
+                {'action': 'plugins_check', 'name': u'啟用停用模組'},
             ]
         },
         'warehouse': {

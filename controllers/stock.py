@@ -191,8 +191,6 @@ class Stock(Controller):
         order = self.params.get_ndb_record('order_key')
         history = create_history(self.application_user, operation, remake, order=order)
         if order is not None:
-            order.need_reset_stock_quantity = True
-            order.put()
             task = taskqueue.add(
                 url=self.uri('taskqueue:product_stock:stock:reset_order_quantity'),
                 params={'order': self.util.encode_key(order), 'history': self.util.encode_key(history)})
