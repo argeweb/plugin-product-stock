@@ -92,7 +92,6 @@ def get_need_update_spec_item_list(new_spec_list, old_spec_records):
 class Stock(Controller):
     class Meta:
         Model = StockKeepingUnitModel
-        components = (scaffold.Scaffolding, Pagination, Search)
 
     class Scaffold:
         display_in_list = ('sku_full_name', 'product', 'title', 'quantity', 'is_enable', 'can_be_purchased')
@@ -276,7 +275,7 @@ class Stock(Controller):
         self.context['has_record'] = True
 
         def query_factory(controller):
-            model = controller.meta.Model
+            model = controller.meta.model
             return model.query(model.product_object == product_record.key).order(model.sort)
         self.scaffold.query_factory = query_factory
         scaffold.list(self)

@@ -12,9 +12,6 @@ from argeweb.components.search import Search
 
 
 class Warehouse(Controller):
-    class Meta:
-        components = (scaffold.Scaffolding, Pagination, Search)
-
     class Scaffold:
         display_in_list = ('name', 'title', 'address', 'telephone')
 

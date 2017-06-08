@@ -12,9 +12,6 @@ from argeweb.components.search import Search
 
 
 class StockHistory(Controller):
-    class Meta:
-        components = (scaffold.Scaffolding, Pagination, Search)
-
     class Scaffold:
         # display_in_list = ('sku_full_name', 'category', 'title', 'quantity', 'is_enable', 'can_be_purchased')
         disabled_in_form = ('user', 'user_name', 'operation')
