@@ -1,0 +1,63 @@
+- kind: StockModel
+  properties:
+  - name: category
+  - name: sort
+    direction: desc
+
+- kind: StockModel
+  properties:
+  - name: category
+  - name: sort
+
+- kind: StockHistoryDetailModel
+  properties:
+  - name: history
+  - name: sort
+    direction: desc
+
+- kind: StockHistoryModel
+  properties:
+  - name: category
+  - name: sort
+
+- kind: StockKeepingUnitInWarehouseModel
+  properties:
+  - name: product
+  - name: warehouse
+  - name: quantity
+
+- kind: StockKeepingUnitModel
+  properties:
+  - name: category
+  - name: sort
+    direction: desc
+  - name: spec_full_name
+
+- kind: StockKeepingUnitModel
+  properties:
+  - name: is_enable
+  - name: sort
+    direction: desc
+
+- kind: StockKeepingUnitModel
+  properties:
+  - name: product_object
+  - name: sort
+
+- kind: StockKeepingUnitModel
+  properties:
+  - name: product_object
+  - name: sort
+    direction: desc
+
+- kind: StockKeepingUnitModel
+  properties:
+  - name: product_object
+  - name: sort
+    direction: desc
+  - name: spec_full_name
+
+- kind: StockKeepingUnitModel
+  properties:
+  - name: product_object
+  - name: spec_full_name
