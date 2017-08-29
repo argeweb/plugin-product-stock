@@ -112,7 +112,7 @@ class StockKeepingUnitModel(BasicModel):
     def all_enable(cls, product=None, *args, **kwargs):
         cat = None
         if product:
-            cat = ProductModel.find_by_name(product)
+            cat = ProductModel.get_by_name(product)
         if cat is None:
             return cls.query(cls.is_enable==True).order(-cls.sort)
         else:

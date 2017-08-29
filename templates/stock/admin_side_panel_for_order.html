@@ -1,10 +1,9 @@
 {% extends "backend/form.html" %}
-{% block layout_header %}{% endblock %}
-{% block layout_content %}
+{% block page_header %}{% endblock %}
+{% block page_content_without_wrapper %}
     <div class="sidebar-container" style="width: auto; height: 100%;" id="app">
-        <ul class="nav nav-tabs navs-3">
-            <li class="active"><a data-toggle="tab" href="#tab-order-item" aria-expanded="true">訂購項目</a></li>
-            <li class=""><a data-toggle="tab" href="#tab-insert-item" aria-expanded="false">新增項目</a></li>
+        <ul class="nav nav-tabs navs-2">
+            <li class="active"><a data-toggle="tab" href="#tab-order-item" aria-expanded="true">訂單出庫</a></li>
             <li class=""><a data-toggle="tab" href="#tab-other" aria-expanded="false"><span class="hidden-xs">相關操作</span><span class="visible-xs">操作</span></a></li>
         </ul>
 
@@ -66,15 +65,19 @@
                 <br style="clear: both;">
                 </form>
             </div>
-            <div id="tab-insert-item" class="tab-pane">
-            </div>
             <div id="tab-other" class="tab-pane">
+                <div class="sidebar-title">
+                    <h4>返回訂購項目</h4>
+                    <small>回到訂購項目頁面。</small>
+                    <a href="{{ uri("admin:order:order_item:list_for_side_panel", target=print_key(order)) }}" class="btn brand-bg-color"
+                       target="aside_area" style="color: #fff; width: 100%;margin: 10px 0 20px 0">返回</a>
+                </div>
             </div>
         </div>
     </div>
 {% endblock %}
 
-{% block layout_scripts %}
+{% block page_scripts %}
 <script type="text/javascript">
     (function(page){
         var p = methods.sortByKey([{% for item in context["sku_instance_list"] %}{

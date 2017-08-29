@@ -6,15 +6,13 @@
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
 
-from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
-from argeweb.components.pagination import Pagination
-from argeweb.components.search import Search
+from argeweb import Controller, scaffold, route_menu
 
 
 class Warehouse(Controller):
     class Scaffold:
-        display_in_list = ('name', 'title', 'address', 'telephone')
+        display_in_list = ['name', 'title', 'address', 'telephone']
 
-    @route_menu(list_name=u'backend', text=u'倉庫設置', sort=9932, group=u'系統設定')
+    @route_menu(list_name=u'backend', group=u'產品管理', text=u'倉庫設置', sort=1355)
     def admin_list(self):
         return scaffold.list(self)

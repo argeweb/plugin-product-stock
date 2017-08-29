@@ -1,13 +1,18 @@
 {% extends "backend/form.html" %}
-{% block layout_header %}{% endblock %}
-{% block layout_content %}
-<div class="wrapper wrapper-content">
+{%- block page_header -%}
+    {% if s %}
+        <h1>{{ s.scaffold_title(route.action) }}</h1>
+        {{ s.scaffold_buttons(False) }}
+    {% endif %}
+{% endblock %}
+
+{% block page_content %}
     {%- set list = context[scaffolding.plural] -%}
     <div class="row" style="margin: 25px">
         {% for item in list %}
         <div class="col-sm-6">
-            <div class="social-feed-separated">
-                <div class="social-avatar">
+            <div class="stock-feed-separated">
+                <div class="stock-avatar">
                     {% set user = item.user.get() %}
                     {% if user %}
                     <a href=""><img alt="image" src="{{ user.avatar }}"></a>
@@ -16,25 +21,24 @@
                     {% endif %}
                 </div>
 
-                <div class="social-feed-box">
-                    <div class="social-avatar">
-                        <a href="#">
-                            {{ item.user_name }}
-                        </a>
-                        <small class="text-muted"> 於 {{ print_value(item.created) }} 進行了 {{ item.operation }}</small>
+                <div class="stock-feed-box">
+                    <div>
+                        <a href="#">{{ item.user_name }}</a>
+                        <small class="text-muted"> 進行了 {{ item.operation }} </small>
+                        <a href="#" class="time" title="{{ print_value(item.created) }}"><i class="material-icons">access_time</i></a>
                     </div>
-                    <div class="social-body">
+                    <div class="stock-body">
                         <p>{{ item.remake }}</p>
                     </div>
-                    <div class="social-footer">{% for detail in item.details %}
-                        <div class="social-comment">
+                    <div class="stock-footer">{% for detail in item.details %}
+                        <div class="stock-comment">
                             <a href="" class="pull-left">
                                 <img alt="image" src="{{ detail.product_image }}" style="max-width: 32px; max-height: 32px;">
                             </a>
 
                             <div class="media-body">
                                 <small class="text-muted pull-right">{{ detail.sku_full_name }}</small>
-                                <a href="#">{{ detail.product_name }}</a> {{ detail.spec_full_name }}<br>
+                                <a href="#">{{ detail.product_name }}</a> <br>{{ detail.spec_full_name }}<br>
                                 {% if detail.operation_type == '入庫' %}入庫 <a href="#" class="small">{{ detail.quantity }}</a> 個至 {{ detail.warehouse }}{% endif %}
                                 {% if detail.operation_type == '出庫' %}從 {{ detail.warehouse }} 出庫 <a href="#" class="small">{{ detail.quantity }}</a> 個{% endif %}
                                 {% if detail.warehouse_target != '無' %}{{ detail.operation_type }} 從 {{ detail.warehouse }} 至 {{ detail.warehouse_target }}{% endif %}
@@ -51,6 +55,6 @@
     </div>
     {% block partial_records_footer %}
         {{ s.next_page_link() }}
-        {{ s.partial_include('partial_records_footer.html') }}{% endblock %}
-</div>
+        {{ s.scaffold_last_record_date(last_record_date) }}
+    {% endblock %}
 {% endblock %}

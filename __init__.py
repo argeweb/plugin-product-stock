@@ -7,6 +7,13 @@
 # Date: 2016/07/08.
 
 from argeweb import ViewDatastore
+from argeweb.core.events import on
+
+
+@on('change_product_filed_config')
+def change_product_filed_config(controller, config):
+    controller.scaffold.change_field_visibility('sku_link', config.use_sku)
+
 
 plugins_helper = {
     'title': u'產品庫存',
@@ -33,14 +40,14 @@ plugins_helper = {
                 {'action': 'delete', 'name': u'刪除倉庫'},
             ]
         },
-        'stock_request': {
-            'group': u'出入庫請求',
+        'stock_history': {
+            'group': u'庫存記錄',
             'actions': [
-                {'action': 'list', 'name': u'請求列表'},
-                {'action': 'add', 'name': u'新增請求'},
-                {'action': 'edit', 'name': u'編輯請求'},
-                {'action': 'view', 'name': u'檢視請求'},
-                {'action': 'delete', 'name': u'刪除請求'},
+                {'action': 'list', 'name': u'庫存記錄列表'},
+                {'action': 'add', 'name': u'新增庫存記錄'},
+                {'action': 'edit', 'name': u'編輯庫存記錄'},
+                {'action': 'view', 'name': u'檢視庫存記錄'},
+                {'action': 'delete', 'name': u'刪除庫存記錄'},
             ]
         }
     }

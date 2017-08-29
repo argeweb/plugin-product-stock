@@ -1,6 +1,6 @@
 {% extends "backend/form.html" %}
-{% block layout_header %}{% endblock %}
-{% block layout_content %}
+{% block page_header %}{% endblock %}
+{% block page_content_without_wrapper %}
     <div class="sidebar-container" style="width: auto; height: 100%;" id="app">
         <ul class="nav nav-tabs navs-3">
             <li class="active"><a data-toggle="tab" href="#tab-stock" aria-expanded="true">庫存</a></li>
@@ -145,7 +145,7 @@
     </div>
 {% endblock %}
 
-{% block layout_scripts %}
+{% block page_scripts %}
 <script type="text/javascript">
     (function(page){
         var p = methods.sortByKey([{% for item in spec_records %}{

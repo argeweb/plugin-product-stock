@@ -5,14 +5,9 @@
 # Author: Qi-Liang Wen (温啓良）
 # Web: http://www.yooliang.com/
 # Date: 2015/7/12.
-from google.appengine.ext import ndb
 from google.appengine.api import taskqueue
-from datetime import datetime
-from argeweb import Controller, scaffold, route_menu, Fields, route_with, route
-from argeweb.components.pagination import Pagination
-from argeweb.components.search import Search
+from argeweb import Controller, scaffold, route_menu, route
 from ..models.warehouse_model import WarehouseModel
-from ..models.stock_history_model import StockHistoryModel
 from ..models.stock_keeping_unit_model import StockKeepingUnitModel
 from ..models.stock_keeping_unit_in_warehouse_model import StockKeepingUnitInWarehouseModel as SKUIW_Model
 
@@ -94,9 +89,9 @@ class Stock(Controller):
         Model = StockKeepingUnitModel
 
     class Scaffold:
-        display_in_list = ('sku_full_name', 'product', 'title', 'quantity', 'is_enable', 'can_be_purchased')
-        disabled_in_form = ('product_no', 'product', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime')
-        hidden_in_form = ('product_object')
+        display_in_list = ['sku_full_name', 'product', 'title', 'quantity', 'is_enable', 'can_be_purchased']
+        disabled_in_form = ['product_no', 'product', 'last_in_quantity', 'last_in_datetime', 'last_out_quantity', 'last_out_datetime']
+        hidden_in_form = ['product_object']
 
     @route
     def taskqueue_reset_order_quantity(self):
@@ -134,7 +129,7 @@ class Stock(Controller):
                         continue
         return 'task'
 
-    @route_menu(list_name=u'backend', text=u'最小庫存單位', sort=1206, group=u'產品銷售', need_hr=True)
+    @route_menu(list_name=u'backend', group=u'產品管理', need_hr=True, text=u'最小庫存單位', sort=1206)
     def admin_list(self):
         return scaffold.list(self)
 
@@ -275,12 +270,15 @@ class Stock(Controller):
         self.context['has_record'] = True
 
         def query_factory(controller):
-            model = controller.meta.model
+            model = StockKeepingUnitModel
             return model.query(model.product_object == product_record.key).order(model.sort)
         self.scaffold.query_factory = query_factory
         scaffold.list(self)
 
-        spec_records = self.context[self.scaffold.singular].fetch()
+        spec_records = []
+        spec_temp = self.context[self.scaffold.singular]
+        if spec_temp is not None:
+            spec_records = spec_temp.fetch()
         need_to_insert_spec_items = get_need_update_spec_item_list(spec_lists, spec_records)
 
         if do_update:
